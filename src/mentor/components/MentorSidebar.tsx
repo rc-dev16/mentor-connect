@@ -1,9 +1,9 @@
-import { Home, Calendar, Settings, X, PanelLeftClose, PanelLeftOpen, Users, UserCircle, BookOpen } from "lucide-react";
+import { Home, Users, Calendar, FileText, Settings, X, PanelLeftClose, PanelLeftOpen, BookOpen, MessageSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface SidebarProps {
+interface MentorSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   isCollapsed: boolean;
@@ -11,15 +11,16 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/" },
-  { icon: Calendar, label: "Meetings", path: "/meetings" },
-  { icon: Users, label: "Mentorship Connect", path: "/mentorship-connect" },
-  { icon: UserCircle, label: "Personal Info", path: "/personal-info" },
-  { icon: BookOpen, label: "Resources", path: "/resources" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: Home, label: "Dashboard", path: "/mentor/dashboard" },
+  { icon: Users, label: "My Mentees", path: "/mentor/mentees" },
+  { icon: Calendar, label: "Meetings", path: "/mentor/meetings" },
+  { icon: MessageSquare, label: "Session Requests", path: "/mentor/session-requests" },
+  { icon: BookOpen, label: "Resources", path: "/mentor/resources" },
+  { icon: FileText, label: "Reports", path: "/mentor/reports" },
+  { icon: Settings, label: "Settings", path: "/mentor/settings" },
 ];
 
-const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProps) => {
+const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: MentorSidebarProps) => {
   return (
     <>
       {/* Mobile Overlay */}
@@ -56,10 +57,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProp
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => {
-                console.log('[Sidebar] navigate to', item.path);
-                onClose();
-              }}
+              onClick={() => onClose()}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
@@ -96,4 +94,4 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProp
   );
 };
 
-export default Sidebar;
+export default MentorSidebar;

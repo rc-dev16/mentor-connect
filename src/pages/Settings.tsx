@@ -1,20 +1,39 @@
-import { User, Bell, Lock, Globe, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { User, Bell, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { apiService } from "@/services/api";
 
 const Settings = () => {
+  const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await apiService.getUserProfile();
+        setProfile({ name: data.name, email: data.email });
+      } catch (e) {
+        setProfile({ name: "", email: "" });
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    load();
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account preferences</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-0.5">Manage your account preferences</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Profile Settings */}
         <Card>
           <CardHeader>
@@ -22,28 +41,23 @@ const Settings = () => {
               <User className="h-5 w-5 text-primary" />
               Profile Information
             </CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
+            <CardDescription>Your profile from the database</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" defaultValue="John" />
+          <CardContent className="space-y-3">
+            {loadingProfile ? (
+              <div className="h-16 flex items-center text-sm text-muted-foreground">Loading profile...</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" value={profile?.name || ""} readOnly />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={profile?.email || ""} readOnly />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" defaultValue="Doe" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john.doe@example.com" defaultValue="john.doe@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Input id="bio" placeholder="Tell us about yourself" defaultValue="Experienced mentor in software development" />
-            </div>
-            <Button>Save Changes</Button>
+            )}
           </CardContent>
         </Card>
 
@@ -54,13 +68,13 @@ const Settings = () => {
               <Bell className="h-5 w-5 text-primary" />
               Notifications
             </CardTitle>
-            <CardDescription>Configure your notification preferences</CardDescription>
+            <CardDescription>Email and meeting notifications</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive email updates about meetings</p>
+                <p className="text-sm text-muted-foreground">Receive updates via email</p>
               </div>
               <Switch defaultChecked />
             </div>
@@ -69,14 +83,6 @@ const Settings = () => {
               <div className="space-y-0.5">
                 <Label>Meeting Reminders</Label>
                 <p className="text-sm text-muted-foreground">Get reminded before meetings</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Goal Updates</Label>
-                <p className="text-sm text-muted-foreground">Notifications when mentee updates goals</p>
               </div>
               <Switch defaultChecked />
             </div>
@@ -92,48 +98,20 @@ const Settings = () => {
             </CardTitle>
             <CardDescription>Manage your password and security settings</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
               <Label htmlFor="currentPassword">Current Password</Label>
               <Input id="currentPassword" type="password" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="newPassword">New Password</Label>
               <Input id="newPassword" type="password" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <Input id="confirmPassword" type="password" />
             </div>
             <Button>Update Password</Button>
-          </CardContent>
-        </Card>
-
-        {/* Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Preferences
-            </CardTitle>
-            <CardDescription>Customize your experience</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show Completed Goals</Label>
-                <p className="text-sm text-muted-foreground">Display completed goals in dashboard</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Auto-save Notes</Label>
-                <p className="text-sm text-muted-foreground">Automatically save meeting notes</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
           </CardContent>
         </Card>
       </div>

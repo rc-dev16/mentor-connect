@@ -1,20 +1,20 @@
 import { useState } from "react";
-import Topbar from "./Topbar";
-import Sidebar from "./Sidebar";
 import { cn } from "@/lib/utils";
+import MentorTopbar from "@/mentor/components/MentorTopbar";
+import MentorSidebar from "@/mentor/components/MentorSidebar";
 
-interface LayoutProps {
+interface MentorLayoutProps {
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const MentorLayout = ({ children }: MentorLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
-      <Topbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <Sidebar 
+      <MentorTopbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <MentorSidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)}
         isCollapsed={isSidebarCollapsed}
@@ -33,4 +33,4 @@ const Layout = ({ children }: LayoutProps) => {
   );
 };
 
-export default Layout;
+export default MentorLayout;

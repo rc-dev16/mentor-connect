@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
 
-    --primary: 32 100% 49%;
+    --primary: 20 71% 48%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 17% 95%;
@@ -26,7 +26,7 @@ All colors MUST be HSL.
     --muted: 210 17% 95%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 32 100% 49%;
+    --accent: 20 71% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -34,18 +34,18 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 32 100% 49%;
+    --ring: 20 71% 48%;
 
     --radius: 0.5rem;
 
     /* Orange sidebar theme */
-    --sidebar-background: 32 100% 49%;
+    --sidebar-background: 20 71% 48%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 32 100% 49%;
-    --sidebar-accent: 32 100% 44%;
+    --sidebar-primary-foreground: 20 71% 48%;
+    --sidebar-accent: 20 71% 43%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 32 100% 44%;
+    --sidebar-border: 20 71% 43%;
     --sidebar-ring: 0 0% 100%;
 
     /* Custom transitions */
@@ -62,7 +62,7 @@ All colors MUST be HSL.
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 32 100% 49%;
+    --primary: 20 71% 48%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 20%;
@@ -71,7 +71,7 @@ All colors MUST be HSL.
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 32 100% 49%;
+    --accent: 20 71% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -79,15 +79,15 @@ All colors MUST be HSL.
 
     --border: 0 0% 25%;
     --input: 0 0% 25%;
-    --ring: 32 100% 49%;
+    --ring: 20 71% 48%;
 
-    --sidebar-background: 32 100% 49%;
+    --sidebar-background: 20 71% 48%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 32 100% 49%;
-    --sidebar-accent: 32 100% 44%;
+    --sidebar-primary-foreground: 20 71% 48%;
+    --sidebar-accent: 20 71% 43%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 32 100% 44%;
+    --sidebar-border: 20 71% 43%;
     --sidebar-ring: 0 0% 100%;
   }
 }

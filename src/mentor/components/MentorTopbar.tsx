@@ -1,34 +1,45 @@
+import { useState, useEffect } from "react";
 import { User, Menu, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import apiService from "@/services/api";
+import { apiService } from "@/services/api";
 
-interface TopbarProps {
+interface MentorTopbarProps {
   onMenuClick: () => void;
 }
 
-const Topbar = ({ onMenuClick }: TopbarProps) => {
+const MentorTopbar = ({ onMenuClick }: MentorTopbarProps) => {
   const navigate = useNavigate();
-  
-  const [studentInfo, setStudentInfo] = useState<{ name: string; regNo: string }>({ name: "", regNo: "" });
+  const [mentorInfo, setMentorInfo] = useState({
+    name: "Loading...",
+    email: "Loading..."
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const load = async () => {
+    const loadMentorInfo = async () => {
       try {
-        const p = await apiService.getUserProfile();
-        setStudentInfo({ name: p?.name || "", regNo: p?.registration_number || "" });
-      } catch {}
+        const profile = await apiService.getUserProfile();
+        setMentorInfo({
+          name: profile.name,
+          email: profile.email
+        });
+      } catch (error) {
+        console.error('Error loading mentor profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    load();
+
+    loadMentorInfo();
   }, []);
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-50 shadow-sm">
       <div className="flex items-center h-full px-4 gap-4">
@@ -56,34 +67,24 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 w-auto max-w-[320px] md:max-w-[420px]">
+              <Button variant="ghost" className="gap-2 w-auto max-w-sm">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-primary" />
+                  <User className="h-4 w-4 text-primary opacity-100" />
                 </div>
-                <div className="hidden md:block text-left flex-1">
-                  <p className="text-sm font-medium leading-snug whitespace-normal break-words">{studentInfo.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1 whitespace-normal break-words">{studentInfo.regNo}</p>
+                <div className="hidden sm:block text-left flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-none truncate">{mentorInfo.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1 truncate max-w-72">
+                    {mentorInfo.email}
+                  </p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => navigate("/personal-info")} className="gap-2">
-                <User className="h-4 w-4" />
-                Personal Info
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2">
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem onClick={() => navigate("/mentor/settings")} className="gap-2">
                 <Settings className="h-4 w-4" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2 text-red-600" onClick={() => {
-                try {
-                  localStorage.removeItem('userInfo');
-                  localStorage.removeItem('userType');
-                  localStorage.removeItem('token');
-                } catch {}
-                navigate('/login');
-              }}>
+              <DropdownMenuItem onClick={() => navigate("/login")} className="gap-2 text-red-600">
                 <LogOut className="h-4 w-4" />
                 Logout
               </DropdownMenuItem>
@@ -95,4 +96,4 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
   );
 };
 
-export default Topbar;
+export default MentorTopbar;

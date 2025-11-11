@@ -57,6 +57,21 @@ class ApiService {
     return response.json();
   }
 
+  async updateUserProfile(data: { phone?: string; cabin?: string; availability?: string; bio?: string }) {
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to update profile' }));
+      throw new Error(error.message || 'Failed to update profile');
+    }
+    
+    return response.json();
+  }
+
   async getMyMentor() {
     const response = await fetch(`${API_BASE_URL}/users/my-mentor`, {
       headers: getHeaders(),
@@ -161,6 +176,18 @@ class ApiService {
     return response.json();
   }
 
+  async downloadMeetingPDF(meetingId: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/download`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to download meeting PDF' }));
+      throw new Error(error.message || 'Failed to download meeting PDF');
+    }
+    return response.blob();
+  }
+
   async getMenteesList() {
     const response = await fetch(`${API_BASE_URL}/meetings/mentees/list`, {
       headers: getHeaders(),
@@ -192,6 +219,54 @@ class ApiService {
     }
     
     return response.json();
+  }
+
+  async createResource(data: { title: string; description?: string; url?: string; file?: File; is_public?: boolean }) { // is_public parameter kept for backward compatibility but not used
+    const formData = new FormData();
+    formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    if (data.url) formData.append('url', data.url);
+    if (data.file) formData.append('file', data.file);
+    if (data.is_public !== undefined) formData.append('is_public', String(data.is_public));
+    if (data.file) formData.append('resource_type', 'file');
+    else if (data.url) formData.append('resource_type', 'link');
+
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/resources`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        // Don't set Content-Type for FormData, browser will set it with boundary
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to create resource' }));
+      throw new Error(error.message || 'Failed to create resource');
+    }
+    
+    return response.json();
+  }
+
+  async downloadResourceFile(fileUrl: string): Promise<Blob> {
+    // fileUrl from database is already in format /api/resources/files/filename
+    // API_BASE_URL is http://localhost:5001/api
+    // So we need to construct the URL properly
+    const baseUrl = API_BASE_URL.replace('/api', ''); // Remove /api to get base URL
+    const url = fileUrl.startsWith('http') ? fileUrl : `${baseUrl}${fileUrl}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to download file' }));
+      throw new Error(error.message || 'Failed to download file');
+    }
+    
+    return response.blob();
   }
 
   // Report endpoints
@@ -302,6 +377,81 @@ class ApiService {
       headers: getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch mentee profile');
+    return response.json();
+  }
+
+  async downloadMenteesPersonalInfo(): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/personal-info/mentees/export`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to download mentees data' }));
+      throw new Error(error.message || 'Failed to download mentees data');
+    }
+    return response.blob();
+  }
+
+  async downloadMenteePersonalInfoPDF(menteeId: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/personal-info/mentee/${menteeId}/pdf`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to download PDF' }));
+      throw new Error(error.message || 'Failed to download PDF');
+    }
+    return response.blob();
+  }
+
+  // Notification endpoints
+  async getNotifications() {
+    const response = await fetch(`${API_BASE_URL}/notifications`, {
+      headers: getHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch notifications');
+    }
+    
+    return response.json();
+  }
+
+  async getUnreadNotificationsCount() {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+      headers: getHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch unread count');
+    }
+    
+    return response.json();
+  }
+
+  async markNotificationAsRead(notificationId: string) {
+    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+      method: 'PUT',
+      headers: getHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to mark notification as read');
+    }
+    
+    return response.json();
+  }
+
+  async markAllNotificationsAsRead() {
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'PUT',
+      headers: getHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to mark all notifications as read');
+    }
+    
     return response.json();
   }
 }

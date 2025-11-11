@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Mail, Phone, Calendar, User, GraduationCap } from "lucide-react";
+import { Search, Mail, Phone, Calendar, User, GraduationCap, Download } from "lucide-react";
 import { apiService } from "@/services/api";
 import MenteeProfileDialog from "../components/MenteeProfileDialog";
 
@@ -28,6 +28,7 @@ const MenteesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedMenteeId, setSelectedMenteeId] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Load mentees from API
   useEffect(() => {
@@ -94,6 +95,37 @@ const MenteesPage = () => {
     setSelectedMenteeId(null);
   };
 
+  const handleDownloadMenteesInfo = async () => {
+    try {
+      setIsDownloading(true);
+      const blob = await apiService.downloadMenteesPersonalInfo();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mentees_personal_info_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Successful",
+        description: `Personal information for ${mentees.length} mentee(s) has been downloaded.`,
+      });
+    } catch (error) {
+      console.error('Error downloading mentees data:', error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download mentees data. Please try again.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -116,9 +148,22 @@ const MenteesPage = () => {
             Manage and track your assigned mentees
           </p>
         </div>
-        <Badge variant="secondary" className="text-sm">
-          {mentees.length} Total Mentees
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="text-sm">
+            {mentees.length} Total Mentees
+          </Badge>
+          {mentees.length > 0 && (
+            <Button
+              onClick={handleDownloadMenteesInfo}
+              disabled={isDownloading}
+              variant="outline"
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              {isDownloading ? "Downloading..." : "Download Personal Info"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Search Bar */}

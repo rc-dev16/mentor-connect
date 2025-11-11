@@ -1,137 +1,103 @@
-import { FileText, Link2, Briefcase, Download, FolderOpen, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, Link2, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import apiService from "@/services/api";
+
+interface Resource {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  resource_type?: string;
+  file_url?: string;
+  mime_type?: string;
+  file_size?: number;
+  created_at: string;
+}
 
 const Resources = () => {
-  // This will be fetched from backend later
-  const resources = {
-    studyMaterials: [
-      {
-        id: 1,
-        title: "Data Structures and Algorithms Guide",
-        type: "pdf",
-        size: "2.5 MB",
-        uploadedAt: "2025-10-01",
-        description: "Comprehensive guide covering basic to advanced DSA concepts",
-        downloadUrl: "#"
-      },
-      {
-        id: 2,
-        title: "System Design Principles",
-        type: "pdf",
-        size: "4.1 MB",
-        uploadedAt: "2025-09-28",
-        description: "Best practices and patterns for scalable system design",
-        downloadUrl: "#"
-      }
-    ],
-    careerResources: [
-      {
-        id: 1,
-        title: "Tech Interview Preparation Guide",
-        type: "link",
-        uploadedAt: "2025-10-02",
-        description: "Curated list of resources for technical interviews",
-        url: "https://example.com/interview-prep"
-      },
-      {
-        id: 2,
-        title: "Top Tech Companies Hiring Process",
-        type: "document",
-        size: "1.2 MB",
-        uploadedAt: "2025-09-30",
-        description: "Detailed breakdown of hiring processes at major tech companies",
-        downloadUrl: "#"
-      }
-    ],
-    internshipGuidelines: [
-      {
-        id: 1,
-        title: "Summer Internship Opportunities 2026",
-        type: "pdf",
-        size: "1.8 MB",
-        uploadedAt: "2025-10-03",
-        description: "List of companies offering summer internships with application deadlines",
-        downloadUrl: "#"
-      },
-      {
-        id: 2,
-        title: "Internship Application Tips",
-        type: "link",
-        uploadedAt: "2025-09-29",
-        description: "Expert advice on crafting successful internship applications",
-        url: "https://example.com/internship-tips"
-      }
-    ]
-  };
+  const { toast } = useToast();
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case "pdf":
-        return <FileText className="h-5 w-5 text-red-500" />;
-      case "link":
-        return <Link2 className="h-5 w-5 text-blue-500" />;
-      case "document":
-        return <FileText className="h-5 w-5 text-blue-500" />;
-      default:
-        return <FileText className="h-5 w-5 text-primary" />;
+  const loadResources = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiService.getResources();
+      setResources(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('Error loading resources:', e);
+      setResources([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const ResourceCard = ({ title, icon, resources }: any) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl flex items-center gap-2">
-          {icon}
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {resources.map((resource: any) => (
-          <div
-            key={resource.id}
-            className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-          >
-            {getResourceIcon(resource.type)}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium text-base truncate">{resource.title}</p>
-                  <p className="text-sm text-muted-foreground">{resource.description}</p>
-                </div>
-                {resource.type === "link" ? (
-                  <Button variant="outline" size="sm" className="shrink-0" asChild>
-                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Open Link
-                    </a>
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" className="shrink-0" asChild>
-                    <a href={resource.downloadUrl} download>
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </a>
-                  </Button>
-                )}
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                {resource.size && (
-                  <Badge variant="secondary" className="font-normal">
-                    {resource.size}
-                  </Badge>
-                )}
-                <Badge variant="secondary" className="font-normal">
-                  Added {resource.uploadedAt}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
+  useEffect(() => {
+    loadResources();
+  }, []);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const getResourceIcon = (resource: Resource) => {
+    if (resource.resource_type === 'file') {
+      return <FileText className="h-5 w-5 text-red-500" />;
+    }
+    return <Link2 className="h-5 w-5 text-blue-500" />;
+  };
+
+  const handleViewFile = async (resource: Resource) => {
+    if (!resource.file_url) return;
+    
+    try {
+      setDownloadingFileId(resource.id);
+      const blob = await apiService.downloadResourceFile(resource.file_url);
+      
+      // Create a blob URL
+      const url = window.URL.createObjectURL(blob);
+      
+      // For PDFs, open in new tab
+      if (resource.mime_type === 'application/pdf') {
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          // If popup blocked, fall back to download
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${resource.title}.pdf`;
+          link.click();
+        }
+      } else {
+        // For Word docs, download directly
+        const link = document.createElement('a');
+        link.href = url;
+        const ext = resource.file_url.split('.').pop() || 'doc';
+        link.download = `${resource.title}.${ext}`;
+        link.click();
+      }
+      
+      // Clean up the blob URL after a delay
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (error: any) {
+      console.error('Error viewing file:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to view file"
+      });
+    } finally {
+      setDownloadingFileId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -140,23 +106,78 @@ const Resources = () => {
         <p className="text-muted-foreground mt-2">Access study materials and resources shared by your mentor</p>
       </div>
 
-      <div className="grid gap-6">
-        <ResourceCard
-          title="Study Materials"
-          icon={<FolderOpen className="h-5 w-5 text-orange-500" />}
-          resources={resources.studyMaterials}
-        />
-        <ResourceCard
-          title="Career Resources"
-          icon={<Briefcase className="h-5 w-5 text-purple-500" />}
-          resources={resources.careerResources}
-        />
-        <ResourceCard
-          title="Internship Guidelines"
-          icon={<FileText className="h-5 w-5 text-green-500" />}
-          resources={resources.internshipGuidelines}
-        />
-      </div>
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">Loading resources...</div>
+          </CardContent>
+        </Card>
+      ) : resources.length === 0 ? (
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No resources available</p>
+              <p className="text-sm mt-2">Your mentor hasn't shared any resources yet.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Resources</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {resources.map((resource) => (
+              <div
+                key={resource.id}
+                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+              >
+                {getResourceIcon(resource)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-base truncate">{resource.title}</p>
+                      {resource.description && (
+                        <p className="text-sm text-muted-foreground">{resource.description}</p>
+                      )}
+                    </div>
+                    {resource.resource_type === 'file' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => handleViewFile(resource)}
+                        disabled={downloadingFileId === resource.id}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        {downloadingFileId === resource.id ? "Loading..." : "View File"}
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" className="shrink-0" asChild>
+                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Open Link
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    {resource.file_size && (
+                      <Badge variant="secondary" className="font-normal">
+                        {formatFileSize(resource.file_size)}
+                      </Badge>
+                    )}
+                    <Badge variant="secondary" className="font-normal">
+                      Added {new Date(resource.created_at).toLocaleDateString()}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CheckCircle, Edit2, Link, Plus, Trash2 } from "lucide-react"
+import { CheckCircle, Edit2, Link, Plus, Trash2, Download } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -65,6 +65,7 @@ const MeetingsPage = () => {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false)
   const [menteesList, setMenteesList] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [downloadingMeetingId, setDownloadingMeetingId] = useState<string | null>(null)
   
   const mapMeeting = (m: any): Meeting => ({
     id: m.id,
@@ -271,6 +272,37 @@ const MeetingsPage = () => {
     }
   }
 
+  const handleDownloadMeetingPDF = async (meetingId: string, meetingTitle: string) => {
+    try {
+      setDownloadingMeetingId(meetingId)
+      const blob = await apiService.downloadMeetingPDF(meetingId)
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `meeting_notes_${meetingTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      toast({
+        title: "PDF Downloaded",
+        description: "Meeting notes and attendance PDF has been downloaded successfully.",
+      })
+    } catch (error) {
+      console.error('Error downloading meeting PDF:', error)
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download meeting PDF. Please try again.",
+      })
+    } finally {
+      setDownloadingMeetingId(null)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -393,8 +425,22 @@ const MeetingsPage = () => {
                       <TableCell>{formatDateDMY(meeting.date)}</TableCell>
                       <TableCell>{meeting.topic}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewMeeting(meeting)}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleViewMeeting(meeting)}
+                        >
                           View Notes
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadMeetingPDF(meeting.id, meeting.topic)}
+                          disabled={downloadingMeetingId === meeting.id}
+                          className="gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          {downloadingMeetingId === meeting.id ? "Downloading..." : "Download PDF"}
                         </Button>
                       </TableCell>
                     </TableRow>

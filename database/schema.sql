@@ -14,6 +14,8 @@ CREATE TABLE users (
     registration_number VARCHAR(50),
     department VARCHAR(100),
     phone VARCHAR(20),
+    cabin VARCHAR(50),
+    availability VARCHAR(255),
     bio TEXT,
     profile_image_url VARCHAR(500),
     is_active BOOLEAN DEFAULT true,

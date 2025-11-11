@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Clock, Bell, Mail, Phone, Building2, AlertCircle, CheckCircle, FileText, Calendar, XCircle, Info } from "lucide-react";
+import { Clock, Bell, Mail, Phone, Building2, AlertCircle, CheckCircle, FileText, Calendar, XCircle, Info, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,8 @@ const getNotificationIcon = (notification: any) => {
         notification.status === "completed" ?
         <CheckCircle className="h-5 w-5 text-green-500" /> :
         <XCircle className="h-5 w-5 text-red-500" />;
+    case "resource_added":
+      return <BookOpen className="h-5 w-5 text-blue-500" />;
     case "info_update":
       return <AlertCircle className="h-5 w-5 text-yellow-500" />;
     case "meeting_notes":
@@ -36,7 +38,13 @@ const getNotificationIcon = (notification: any) => {
 
 const MenteeDashboard = () => {
   const [studentInfo, setStudentInfo] = useState<any>({ name: "", email: "" });
-  const [assignedMentor, setAssignedMentor] = useState<any>({ name: "", email: "", phone: "" });
+  const [assignedMentor, setAssignedMentor] = useState<any>({ 
+    name: "", 
+    email: "", 
+    phone: "", 
+    cabin: "", 
+    availability: "" 
+  });
   const [loadingHeader, setLoadingHeader] = useState(true);
   useEffect(() => {
     const load = async () => {
@@ -46,7 +54,15 @@ const MenteeDashboard = () => {
           apiService.getMyMentor().catch(() => null),
         ]);
         setStudentInfo(profile || {});
-        if (mentor) setAssignedMentor(mentor);
+        if (mentor) {
+          setAssignedMentor({
+            name: mentor.name || "",
+            email: mentor.email || "",
+            phone: mentor.phone || "",
+            cabin: mentor.cabin || "",
+            availability: mentor.availability || ""
+          });
+        }
       } catch (e) {
         // fallback to blanks
       } finally {
@@ -80,6 +96,22 @@ const MenteeDashboard = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        // Fetch notifications from the notifications API
+        const notifications = await apiService.getNotifications().catch(() => []);
+        
+        const formatTimeAgo = (dateString: string) => {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+          if (diffInSeconds < 60) return 'Just now';
+          if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
+          if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+          if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+          return date.toLocaleDateString();
+        };
+
+        // Also fetch session requests for backward compatibility
         const requests = await apiService.getSessionRequests().catch(() => []);
         const toDateOnly = (v: any) => {
           if (!v) return '';
@@ -92,21 +124,24 @@ const MenteeDashboard = () => {
           return `${d}-${m}-${y}`;
         };
         const formatHM = (hhmm?: string) => (hhmm ? hhmm.slice(0, 5) : '');
-        const formatTs = (ts?: string) => {
-          if (!ts) return '';
-          const date = new Date(ts);
-          const dd = String(date.getDate()).padStart(2, '0');
-          const mm = String(date.getMonth() + 1).padStart(2, '0');
-          const yyyy = date.getFullYear();
-          const hh = String(date.getHours()).padStart(2, '0');
-          const mi = String(date.getMinutes()).padStart(2, '0');
-          return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
-        };
 
-        const items = Array.isArray(requests) ? requests
-          .sort((a: any, b: any) => String((b.updated_at||b.created_at||'')).localeCompare(String((a.updated_at||a.created_at||''))))
-          .slice(0, 5)
-          .map((r: any) => {
+        // Map notifications from API
+        const notificationItems = Array.isArray(notifications) ? notifications.map((n: any) => {
+            return {
+              id: n.id,
+              type: n.type,
+              title: n.title,
+              message: n.message,
+              time: formatTimeAgo(n.created_at),
+              created_at: n.created_at,
+              is_read: n.is_read,
+              related_entity_type: n.related_entity_type,
+              related_entity_id: n.related_entity_id
+            };
+          }) : [];
+
+        // Map session requests (for backward compatibility)
+        const requestItems = Array.isArray(requests) ? requests.map((r: any) => {
             const status = (r.status || '').toLowerCase();
             const type = status === 'pending' ? 'session_request' : 'session_status';
             const dateOnly = toDateOnly(r.preferred_date);
@@ -115,11 +150,39 @@ const MenteeDashboard = () => {
               : status === 'approved'
                 ? `Your session request accepted by mentor`
                 : `Your mentorship session request '${r.title}' was rejected`;
-            const time = formatTs(r.updated_at || r.created_at);
-            return { id: r.id, type, status, message, time, scheduledDate: formatDMY(dateOnly), scheduledTime: formatHM(r.preferred_time) };
+            const time = formatTimeAgo(r.updated_at || r.created_at);
+            return { 
+              id: `request-${r.id}`, 
+              type, 
+              status, 
+              title: 'Session Request',
+              message, 
+              time, 
+              created_at: r.updated_at || r.created_at,
+              updated_at: r.updated_at,
+              scheduledDate: formatDMY(dateOnly), 
+              scheduledTime: formatHM(r.preferred_time),
+              is_read: false
+            };
           }) : [];
-        setRecentNotifications(items);
+
+        // Combine notifications and session requests
+        const allItems = [...notificationItems, ...requestItems]
+          .sort((a: any, b: any) => {
+            // Sort unread first, then by date (most recent first)
+            if (a.is_read !== b.is_read) {
+              return a.is_read ? 1 : -1;
+            }
+            // Sort by date
+            const dateA = new Date(a.created_at || a.updated_at || 0).getTime();
+            const dateB = new Date(b.created_at || b.updated_at || 0).getTime();
+            return dateB - dateA;
+          })
+          .slice(0, 10);
+
+        setRecentNotifications(allItems);
       } catch (e) {
+        console.error('Error loading notifications:', e);
         setRecentNotifications([]);
       }
     };
@@ -145,18 +208,24 @@ const MenteeDashboard = () => {
               <Mail className="h-5 w-5 text-primary" />
               <span className="text-base">{assignedMentor.email || '—'}</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-primary" />
-              <span className="text-base">{assignedMentor.phone || '—'}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Building2 className="h-5 w-5 text-primary" />
-              <span className="text-base">Cabin: {assignedMentor.cabin}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-primary" />
-              <span className="text-base">Available: {assignedMentor.availability}</span>
-            </div>
+            {assignedMentor.phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="h-5 w-5 text-primary" />
+                <span className="text-base">{assignedMentor.phone}</span>
+              </div>
+            )}
+            {assignedMentor.cabin && (
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-primary" />
+                <span className="text-base">Cabin: {assignedMentor.cabin}</span>
+              </div>
+            )}
+            {assignedMentor.availability && (
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary" />
+                <span className="text-base">Available: {assignedMentor.availability}</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -209,34 +278,19 @@ const MenteeDashboard = () => {
           <CardContent className="pt-0">
             <div className="grid gap-3">
               {recentNotifications.slice(0, 3).map((notification) => {
-                const getNotificationIcon = () => {
-                  switch (notification.type) {
-                    case "session_request":
-                      return notification.status === "pending" ? 
-                        <AlertCircle className="h-5 w-5 text-yellow-500" /> :
-                        <CheckCircle className="h-5 w-5 text-green-500" />;
-    case "session_status":
-      return notification.status === "accepted" ?
-        <CheckCircle className="h-5 w-5 text-green-500" /> :
-        notification.status === "rescheduled" ?
-        <Calendar className="h-5 w-5 text-blue-500" /> :
-        <Info className="h-5 w-5 text-muted-foreground" />;
-                    case "info_update":
-                      return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-                    case "meeting_notes":
-                      return <FileText className="h-5 w-5 text-blue-500" />;
-                    default:
-                      return <Bell className="h-5 w-5 text-primary" />;
-                  }
-                };
 
                 return (
                   <div
                     key={notification.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                    className={`flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors ${
+                      !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                    }`}
                   >
-                    {getNotificationIcon()}
+                    {getNotificationIcon(notification)}
                     <div className="flex-1 min-w-0">
+                      {notification.title && (
+                        <p className="text-xs font-semibold text-foreground mb-1">{notification.title}</p>
+                      )}
                       {notification.type === "session_status" && notification.status === "approved" && (
                         <div className="flex items-center gap-2 mb-1">
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-xs">
@@ -255,11 +309,20 @@ const MenteeDashboard = () => {
                           <p className="text-green-600">Rescheduled to: {notification.newTime}</p>
                         </div>
                       )}
+                      {notification.type === "resource_added" && (
+                        <Button 
+                          variant="link" 
+                          className="h-auto p-0 text-primary"
+                          onClick={() => window.location.href = "/resources"}
+                        >
+                          View Resources
+                        </Button>
+                      )}
                       {notification.type === "meeting_notes" && (
                         <Button 
                           variant="link" 
                           className="h-auto p-0 text-primary"
-                          onClick={() => window.location.href = notification.link}
+                          onClick={() => window.location.href = notification.link || "/mentorship-connect"}
                         >
                           View Notes
                         </Button>
@@ -273,8 +336,11 @@ const MenteeDashboard = () => {
                           Update Now
                         </Button>
                       )}
-                      {/* Hide backend update timestamp to avoid duplicate time display */}
+                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
                     </div>
+                    {!notification.is_read && (
+                      <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
+                    )}
                   </div>
                 );
               })}
@@ -290,47 +356,72 @@ const MenteeDashboard = () => {
                   <DialogTitle className="text-2xl">All Notifications</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
-                  {recentNotifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="flex items-start gap-3 pb-4 border-b border-border last:border-0"
-                    >
-                      {getNotificationIcon(notification)}
-                      <div className="flex-1 space-y-2">
-                        <p className="text-base text-foreground">{notification.message}</p>
-                        {notification.type === "session_status" && notification.status === "accepted" && (
-                          <p className="text-sm text-green-600 font-medium">
-                            Scheduled for {notification.meetingTime}
-                          </p>
-                        )}
-                        {notification.type === "session_status" && notification.status === "rescheduled" && (
-                          <div className="text-sm space-y-1">
-                            <p className="text-red-500 line-through">{notification.oldTime}</p>
-                            <p className="text-green-600">Rescheduled to: {notification.newTime}</p>
-                          </div>
-                        )}
-                        {notification.type === "meeting_notes" && (
-                          <Button 
-                            variant="link" 
-                            className="h-auto p-0 text-primary"
-                            onClick={() => window.location.href = notification.link}
-                          >
-                            View Notes
-                          </Button>
-                        )}
-                        {notification.type === "info_update" && notification.status === "reminder" && (
-                          <Button 
-                            variant="link" 
-                            className="h-auto p-0 text-primary"
-                            onClick={() => window.location.href = "/personal-info"}
-                          >
-                            Update Now
-                          </Button>
-                        )}
-                        <p className="text-sm text-muted-foreground">{notification.time}</p>
-                      </div>
+                  {recentNotifications.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">No notifications</p>
+                      <p className="text-sm mt-2">You're all caught up!</p>
                     </div>
-                  ))}
+                  ) : (
+                    recentNotifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`flex items-start gap-3 pb-4 border-b border-border last:border-0 ${
+                          !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg' : ''
+                        }`}
+                      >
+                        {getNotificationIcon(notification)}
+                        <div className="flex-1 space-y-2">
+                          {notification.title && (
+                            <p className="text-sm font-semibold text-foreground">{notification.title}</p>
+                          )}
+                          <p className="text-base text-foreground">{notification.message}</p>
+                          {notification.type === "session_status" && notification.status === "accepted" && (
+                            <p className="text-sm text-green-600 font-medium">
+                              Scheduled for {notification.scheduledTime} on {notification.scheduledDate}
+                            </p>
+                          )}
+                          {notification.type === "session_status" && notification.status === "rescheduled" && (
+                            <div className="text-sm space-y-1">
+                              <p className="text-red-500 line-through">{notification.oldTime}</p>
+                              <p className="text-green-600">Rescheduled to: {notification.newTime}</p>
+                            </div>
+                          )}
+                          {notification.type === "resource_added" && (
+                            <Button 
+                              variant="link" 
+                              className="h-auto p-0 text-primary"
+                              onClick={() => window.location.href = "/resources"}
+                            >
+                              View Resources
+                            </Button>
+                          )}
+                          {notification.type === "meeting_notes" && (
+                            <Button 
+                              variant="link" 
+                              className="h-auto p-0 text-primary"
+                              onClick={() => window.location.href = notification.link || "/mentorship-connect"}
+                            >
+                              View Notes
+                            </Button>
+                          )}
+                          {notification.type === "info_update" && (
+                            <Button 
+                              variant="link" 
+                              className="h-auto p-0 text-primary"
+                              onClick={() => window.location.href = "/personal-info"}
+                            >
+                              Update Now
+                            </Button>
+                          )}
+                          <p className="text-sm text-muted-foreground">{notification.time}</p>
+                        </div>
+                        {!notification.is_read && (
+                          <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </DialogContent>
             </Dialog>

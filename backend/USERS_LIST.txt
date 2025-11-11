@@ -1,0 +1,60 @@
+           name           |                 email                  | user_type 
+--------------------------+----------------------------------------+-----------
+  Dr. Rohit Mittal        | .rohit.mittal@jaipur.manipal.edu       | mentor
+ Dr G.L Saini             | gl.saini@jaipur.manipal.edu            | mentor
+ Dr, Vijay Kumar Sharma   | vijay.kumar.sharma@jaipur.manipal.edu  | mentor
+ Dr. Abhay Sharma         | abhay.sharma@jaipur.manipal.edu        | mentor
+ Dr. Amita Nandal         | amita.nandal@jaipur.manipal.edu        | mentor
+ Dr. Bhawana Sharma       | bhawana.sharma@jaipur.manipal.edu      | mentor
+ Dr. Deepak Sinwar        | deepak.sinwar@jaipur.manipal.edu       | mentor
+ Dr. Emily Rodriguez      | emily.rodriguez@jaipur.manipal.edu     | mentor
+ Dr. Govind               | govind@jaipur.manipal.edu              | mentor
+ Dr. Gyanendra Kumar      | gyanendra.kumar@jaipur.manipal.edu     | mentor
+ Dr. Hemlata Goyal        | hemlata.goyal@jaipur.manipal.edu       | mentor
+ Dr. Nandini Babbar       | nandini.babbar@jaipur.manipal.edu      | mentor
+ Dr. Prashant             | prashant@jaipur.manipal.edu            | mentor
+ Dr. Praveen Kumar Shukla | praveen.kr.shukla@jaipur.manipal.edu   | mentor
+ Dr. Rajesh Kumar         | rajesh.kumar@jaipur.manipal.edu        | mentor
+ Dr. Renu Kumawat         | renu.kumawat@jaipur.manipal.edu        | mentor
+ Dr. Rohit Singh          | rohit.singh@jaipur.manipal.edu         | mentor
+ Dr. Saikat Samanta       | saikat.samanta@jaipur.manipal.edu      | mentor
+ Dr. Sandeep Singh        | sandeep.singh@jaipur.manipal.edu       | mentor
+ Dr. Sarah Wilson         | sarah.wilson@jaipur.manipal.edu        | mentor
+ Dr. Satveer Singh        | satveer.singh@jaipur.manipal.edu       | mentor
+ Dr. Sourabh Singh Verma  | sourabh.singh.verma@jaipur.manipal.edu | mentor
+ Dr. Suman Bhakar         | suman.bhakar@jaipur.manipal.edu        | mentor
+ Dr. Sunil Kumar D        | sunil.kumar.d@jaipur.manipal.edu       | mentor
+ Dr. Usha Choudhary       | usha.choudhary@jaipur.manipal.edu      | mentor
+ Prof. Michael Chen       | prof.michael.chen@jaipur.manipal.edu   | mentor
+(26 rows)
+
+========================================
+
+             name             |                   email                   | registration_number 
+------------------------------+-------------------------------------------+---------------------
+ AADI JAIN                    | AADI.23FE10CII00006@muj.manipal.edu       | 23FE10CII00006
+ AADITYA MUKU                 | AADITYA.23FE10CII00133@muj.manipal.edu    | 23FE10CII00133
+ AARADHYA JAIN                | AARADHYA.23FE10CII00231@muj.manipal.edu   | 23FE10CII00231
+ AAROHI TYAGI                 | AAROHI.23FE10CII00094@muj.manipal.edu     | 23FE10CII00094
+ AAYUSH YADAV                 | AAYUSH.23FE10CII00129@muj.manipal.edu     | 23FE10CII00129
+ ABHAY JASAIWAL               | ABHAY.23FE10CII00235@muj.manipal.edu      | 23FE10CII00235
+ ABHAY PRATAP SINGH CHOUDHARY | ABHAY.23FE10CII00043@muj.manipal.edu      | 23FE10CII00043
+ ABHI GARG                    | ABHI.23FE10CII00128@muj.manipal.edu       | 23FE10CII00128
+ ABHIRAJ THAKUR               | ABHIRAJ.23FE10CII00169@muj.manipal.edu    | 23FE10CII00169
+ ADITI SHRIVASTAVA            | ADITI.23FE10CII00194@muj.manipal.edu      | 23FE10CII00194
+ ADITI VERMA                  | ADITI.23FE10CII00093@muj.manipal.edu      | 23FE10CII00093
+ ADITYA AGARWAL               | ADITYA.23FE10CII00240@muj.manipal.edu     | 23FE10CII00240
+ ADITYA KUMAR                 | ADITYA.23FE10CII00001@muj.manipal.edu     | 23FE10CII00001
+ AKSHAT SINGH                 | AKSHAT.23FE10CII00176@muj.manipal.edu     | 23FE10CII00176
+ AKSHITA JHA                  | AKSHITA.23FE10CII00218@muj.manipal.edu    | 23FE10CII00218
+ AMAY NAGAR                   | AMAY.23FE10CII00167@muj.manipal.edu       | 23FE10CII00167
+ AMISHA SHARMA                | AMISHA.23FE10CII00207@muj.manipal.edu     | 23FE10CII00207
+ AMRISHA SRIVASTAVA           | AMRISHA.23FE10CII00196@muj.manipal.edu    | 23FE10CII00196
+ AMRITANSHU RAJ SINGH         | AMRITANSHU.23FE10CII00044@muj.manipal.edu | 23FE10CII00044
+ ANANYA SRIVASTAVA            | ANANYA.23FE10CII00132@muj.manipal.edu     | 23FE10CII00132
+(20 rows)
+
+
+... and 200 more students
+
+All users password: password123

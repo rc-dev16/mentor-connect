@@ -101,10 +101,12 @@ const Login = () => {
                 disabled={isLoading}
               />
               <div className="mt-1 text-xs space-y-1 text-muted-foreground">
-                <p>Test Credentials (from database):</p>
+                <p className="font-semibold text-green-600">✓ All users authenticated! (246 users)</p>
+                <p className="font-medium">Sample credentials:</p>
                 <p>Mentor: praveen.kr.shukla@jaipur.manipal.edu</p>
                 <p>Student: nishant.23fe10cii00012@muj.manipal.edu</p>
-                <p>Password: password123</p>
+                <p className="font-semibold">Password for ALL users: password123</p>
+                <p className="text-amber-600 mt-1">💡 Any user email works with this password</p>
               </div>
             </div>
 

@@ -1,22 +1,43 @@
 import { useEffect, useState } from "react";
-import { User, Bell, Lock } from "lucide-react";
+import { User, Bell, Lock, Phone, Building2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import { apiService } from "@/services/api";
 
 const Settings = () => {
-  const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<{ 
+    name: string; 
+    email: string; 
+    phone?: string; 
+    cabin?: string; 
+    availability?: string;
+    user_type?: string;
+  } | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    phone: "",
+    cabin: "",
+    availability: "",
+  });
 
   useEffect(() => {
     const load = async () => {
       try {
         const data = await apiService.getUserProfile();
-        setProfile({ name: data.name, email: data.email });
+        setProfile(data);
+        setFormData({
+          phone: data.phone || "",
+          cabin: data.cabin || "",
+          availability: data.availability || "",
+        });
       } catch (e) {
         setProfile({ name: "", email: "" });
       } finally {
@@ -25,6 +46,26 @@ const Settings = () => {
     };
     load();
   }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const updated = await apiService.updateUserProfile(formData);
+      setProfile(updated);
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update profile",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -56,6 +97,65 @@ const Settings = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={profile?.email || ""} readOnly />
                 </div>
+                <Separator />
+                {profile?.user_type === 'mentor' && (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="phone" className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Phone Number
+                      </Label>
+                      <Input 
+                        id="phone" 
+                        value={formData.phone} 
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cabin" className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Cabin
+                      </Label>
+                      <Input 
+                        id="cabin" 
+                        value={formData.cabin} 
+                        onChange={(e) => setFormData({ ...formData, cabin: e.target.value })}
+                        placeholder="Enter your cabin number/location"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="availability" className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Availability
+                      </Label>
+                      <Textarea 
+                        id="availability" 
+                        value={formData.availability} 
+                        onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
+                        placeholder="Enter your availability (e.g., Mon-Fri 9am-5pm)"
+                        rows={3}
+                      />
+                    </div>
+                    <Button onClick={handleSave} disabled={saving}>
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </>
+                )}
+                {profile?.user_type !== 'mentor' && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input 
+                      id="phone" 
+                      value={formData.phone} 
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="Enter your phone number"
+                    />
+                    <Button onClick={handleSave} disabled={saving} className="mt-2">
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

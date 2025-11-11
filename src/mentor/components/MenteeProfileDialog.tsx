@@ -19,7 +19,8 @@ import {
   Users, 
   Building,
   FileText,
-  Loader2
+  Loader2,
+  Download
 } from "lucide-react";
 import { apiService } from "@/services/api";
 
@@ -76,6 +77,7 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
   const { toast } = useToast();
   const [profile, setProfile] = useState<MenteeProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
   useEffect(() => {
     if (isOpen && menteeId) {
@@ -111,6 +113,39 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!menteeId) return;
+
+    try {
+      setIsDownloadingPDF(true);
+      const blob = await apiService.downloadMenteePersonalInfoPDF(menteeId);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mentee_personal_info_${profile?.registration_number || menteeId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF Downloaded",
+        description: "Personal information PDF has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download PDF. Please try again.",
+      });
+    } finally {
+      setIsDownloadingPDF(false);
+    }
   };
 
   const hasPersonalInfo = profile?.personal_info && profile.personal_info !== null;
@@ -420,6 +455,17 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                 {isLoading ? "Refreshing..." : "Refresh"}
               </Button>
               <div className="flex gap-2">
+                {hasPersonalInfo && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDownloadPDF}
+                    disabled={isDownloadingPDF}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    {isDownloadingPDF ? "Downloading..." : "Download PDF"}
+                  </Button>
+                )}
                 <Button variant="outline" onClick={onClose}>
                   Close
                 </Button>

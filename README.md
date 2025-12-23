@@ -3,12 +3,12 @@
 # 🎓 Mentor Connect
 ### Bridging the Gap Between Ambition and Guidance
 
-![Banner](https://via.placeholder.com/1200x400?text=Mentor+Connect+Platform)
-
 <br/>
 
 **A modern, full-stack mentorship management platform connecting educational institutions.**  
 *Built for seamless interaction, role-based security, and academic growth.*
+
+🌐 **Live Application:** [mentor-connect.up.railway.app](https://mentor-connect.up.railway.app)
 
 <p align="center">
   <a href="#-features-breakdown">Key Features</a> •
@@ -205,9 +205,11 @@ mentor-connect/
 
 ## 🌐 Deployment (Railway)
 
+**Live Application:** [https://mentor-connect.up.railway.app](https://mentor-connect.up.railway.app)
+
 * **Database:** PostgreSQL service
 * **Backend:** Express API service
-* **Frontend:** Next.js service
+* **Frontend:** React + Vite service
 * **Auth:** Clerk (invite-only, no public signup)
 
 ---

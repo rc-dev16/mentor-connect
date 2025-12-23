@@ -93,7 +93,6 @@ const MenteeMeetings = () => {
   });
 
   const onSubmit = (data: any) => {
-    console.log(data);
     // TODO: Send meeting request to mentor
   };
 

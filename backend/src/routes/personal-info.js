@@ -88,9 +88,6 @@ router.post('/', [
       business_card_url, phone, email
     } = req.body;
 
-    console.log('Personal info API - Phone received:', phone);
-    console.log('Personal info API - Email received:', email);
-
     // Check if personal info already exists
     const existingQuery = 'SELECT id FROM personal_information WHERE user_id = $1';
     const existingResult = await pool.query(existingQuery, [req.user.userId]);
@@ -120,10 +117,8 @@ router.post('/', [
 
       // Update users table if phone or email is provided
       if (phone !== undefined || email !== undefined) {
-        console.log('Updating users table with phone:', phone, 'email:', email);
         const updateUsersQuery = 'UPDATE users SET phone = $1, email = $2 WHERE id = $3';
-        const updateResult = await pool.query(updateUsersQuery, [phone || null, email || null, req.user.userId]);
-        console.log('Users table update result:', updateResult.rows);
+        await pool.query(updateUsersQuery, [phone || null, email || null, req.user.userId]);
       }
 
       res.json({
@@ -156,10 +151,8 @@ router.post('/', [
 
       // Update users table if phone or email is provided
       if (phone !== undefined || email !== undefined) {
-        console.log('Insert case - Updating users table with phone:', phone, 'email:', email);
         const updateUsersQuery = 'UPDATE users SET phone = $1, email = $2 WHERE id = $3';
-        const updateResult = await pool.query(updateUsersQuery, [phone || null, email || null, req.user.userId]);
-        console.log('Insert case - Users table update result:', updateResult.rows);
+        await pool.query(updateUsersQuery, [phone || null, email || null, req.user.userId]);
       }
 
       res.status(201).json({

@@ -24,8 +24,6 @@ const PersonalInfo = () => {
         ]);
         setProfile(userProfile || {});
         setPersonalInfo(personalData.data || personalData || {});
-        console.log('Loaded profile:', userProfile);
-        console.log('Loaded personalInfo:', personalData.data || personalData);
       } catch (e) {
         setProfile({});
         setPersonalInfo({});
@@ -72,10 +70,6 @@ const PersonalInfo = () => {
         phone: formData.get('phone') as string || undefined,
         email: formData.get('email') as string || undefined
       };
-
-      console.log('Form data being sent:', data);
-      console.log('Phone being sent:', data.phone);
-      console.log('Email being sent:', data.email);
 
       await apiService.savePersonalInfo(data);
       

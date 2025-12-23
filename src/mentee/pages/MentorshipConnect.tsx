@@ -49,7 +49,6 @@ const MentorshipConnect = () => {
         console.error('Date and time are required');
         return;
       }
-      console.log('[MentorshipConnect] submit request payload', payload);
       await apiService.createSessionRequest(payload);
       const list = await apiService.getSessionRequests();
       setRequests(list);

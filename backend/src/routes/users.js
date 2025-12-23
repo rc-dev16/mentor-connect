@@ -78,13 +78,12 @@ router.put('/profile', async (req, res) => {
     } else if (cabin !== undefined && !hasCabin) {
       // Column doesn't exist, but user tried to update it
       // We could add the column here, but it's better to return an error or ignore
-      console.warn('cabin column does not exist, skipping update');
     }
     if (availability !== undefined && hasAvailability) {
       updates.push(`availability = $${paramCount++}`);
       values.push(availability);
     } else if (availability !== undefined && !hasAvailability) {
-      console.warn('availability column does not exist, skipping update');
+      // Column doesn't exist, skipping update
     }
     if (bio !== undefined) {
       updates.push(`bio = $${paramCount++}`);

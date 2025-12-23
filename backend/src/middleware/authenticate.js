@@ -19,7 +19,6 @@ async function verifyClerkSession(token) {
     });
     return claims;
   } catch (err) {
-    console.warn('[auth] Clerk verification failed:', err?.message || err);
     return null;
   }
 }
@@ -38,7 +37,6 @@ async function getEmailFromClerk(userId) {
       null
     );
   } catch (err) {
-    console.warn('[auth] Failed to fetch user from Clerk', err?.message || err);
     return null;
   }
 }
@@ -65,18 +63,11 @@ async function authenticateRequest(req, res, next) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
   if (!token) {
-    console.warn('[auth] No Authorization bearer token on', req.path);
     return res.status(401).json({ message: 'Access token required' });
   }
 
   try {
     // 1) Try Clerk token
-    console.info('[auth] Attempting Clerk verification', {
-      path: req.path,
-      hasClerkSecret: !!process.env.CLERK_SECRET_KEY,
-      aud: process.env.CLERK_JWT_AUD || null,
-      authorizedParties: process.env.CLERK_AUTHORIZED_PARTIES || null,
-    });
     const clerkClaims = await verifyClerkSession(token);
     if (clerkClaims) {
       const email =
@@ -85,14 +76,9 @@ async function authenticateRequest(req, res, next) {
         clerkClaims?.primary_email_address?.email_address ||
         clerkClaims?.email_addresses?.[0]?.email_address;
       const resolvedEmail = email || await getEmailFromClerk(clerkClaims.sub);
-      console.info('[auth] Clerk token verified', {
-        sub: clerkClaims.sub,
-        email: resolvedEmail,
-      });
 
       const dbUser = await mapClerkUserToDbUser(resolvedEmail);
       if (!dbUser) {
-        console.warn('[auth] Clerk user not provisioned in DB', { email: resolvedEmail });
         return res.status(403).json({ message: 'User is not provisioned in the database' });
       }
 
@@ -107,7 +93,6 @@ async function authenticateRequest(req, res, next) {
     }
 
     // 2) Fallback to legacy JWT
-    console.info('[auth] Falling back to legacy JWT', { path: req.path });
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
     req.user = decoded;
     req.authSource = 'legacy-jwt';

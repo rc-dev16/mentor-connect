@@ -91,9 +91,6 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
     try {
       setIsLoading(true);
       const profileData = await apiService.getMenteeProfile(menteeId);
-      console.log('Mentee profile data received:', profileData);
-      console.log('Phone number:', profileData.phone);
-      console.log('Timestamp:', new Date().toISOString());
       setProfile(profileData);
     } catch (error) {
       console.error('Error loading profile:', error);

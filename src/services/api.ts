@@ -8,7 +8,7 @@ const getClerkToken = async () => {
       const template = import.meta.env.VITE_CLERK_JWT_TEMPLATE || undefined;
       return await clerk.session.getToken(template ? { template } : undefined);
     } catch (err) {
-      console.warn('[api] Failed to fetch Clerk token', err);
+      // Silent fail - token fetch error
     }
   }
   return null;

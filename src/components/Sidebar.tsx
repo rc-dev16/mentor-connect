@@ -57,7 +57,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProp
               key={item.path}
               to={item.path}
               onClick={() => {
-                console.log('[Sidebar] navigate to', item.path);
                 onClose();
               }}
               className={({ isActive }) =>

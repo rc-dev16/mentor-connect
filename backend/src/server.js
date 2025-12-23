@@ -18,12 +18,38 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+// CORS configuration - allow multiple origins
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:5173',
+  'https://mentor-connect.up.railway.app',
+  // Allow any Railway subdomain for flexibility
+  /^https:\/\/.*\.railway\.app$/
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    process.env.CORS_ORIGIN || 'http://localhost:5173',
-    'http://localhost:8081',
-    'http://localhost:5173'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches allowed origins
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(morgan('combined'));

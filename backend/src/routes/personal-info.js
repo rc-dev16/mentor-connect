@@ -1,31 +1,13 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
 const pool = require('../config/database');
+const authenticateRequest = require('../middleware/authenticate');
 
 const router = express.Router();
 
-// Authentication middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret', (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
 // Apply authentication middleware to all routes
-router.use(authenticateToken);
+router.use(authenticateRequest);
 
 // Get personal information for the logged-in user
 router.get('/', async (req, res) => {

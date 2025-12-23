@@ -1,5 +1,4 @@
 import { Calendar, Clock, CalendarIcon, Clock3 } from "lucide-react";
-import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,23 +24,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import apiService from "@/services/api";
-import { useEffect as useEffect2, useState } from "react";
+import { useEffect, useState } from "react";
 
 const MentorshipConnect = () => {
-  useEffect(() => {
-    try {
-      const userType = localStorage.getItem('userType');
-      const userInfo = localStorage.getItem('userInfo');
-      // Debug route/access context
-      console.log('[MentorshipConnect] mounted', {
-        path: window.location.pathname,
-        userType,
-        hasUserInfo: !!userInfo,
-      });
-    } catch (e) {
-      console.error('[MentorshipConnect] localStorage access error', e);
-    }
-  }, []);
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

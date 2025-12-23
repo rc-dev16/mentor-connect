@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiService from "@/services/api";
+import { useAuth } from "@clerk/clerk-react";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -18,6 +19,7 @@ interface TopbarProps {
 
 const Topbar = ({ onMenuClick }: TopbarProps) => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   
   const [studentInfo, setStudentInfo] = useState<{ name: string; regNo: string }>({ name: "", regNo: "" });
   useEffect(() => {
@@ -76,14 +78,17 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2 text-red-600" onClick={() => {
-                try {
-                  localStorage.removeItem('userInfo');
-                  localStorage.removeItem('userType');
-                  localStorage.removeItem('token');
-                } catch {}
-                navigate('/login');
-              }}>
+              <DropdownMenuItem
+                className="gap-2 text-red-600"
+                onClick={async () => {
+                  try {
+                    sessionStorage.removeItem('userType');
+                    await signOut?.({ redirectUrl: '/login' });
+                  } catch {
+                    navigate('/login');
+                  }
+                }}
+              >
                 <LogOut className="h-4 w-4" />
                 Logout
               </DropdownMenuItem>

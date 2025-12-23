@@ -10,9 +10,11 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { apiService } from "@/services/api";
+import { useClerk } from "@clerk/clerk-react";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { openUserProfile } = useClerk();
   const [profile, setProfile] = useState<{ 
     name: string; 
     email: string; 
@@ -200,19 +202,15 @@ const Settings = () => {
             <CardDescription>Manage your password and security settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input id="currentPassword" type="password" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input id="newPassword" type="password" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input id="confirmPassword" type="password" />
-            </div>
-            <Button>Update Password</Button>
+            <p className="text-sm text-muted-foreground">
+              Sign in with your email OTP, then set a password once you are logged in.
+            </p>
+            <Button onClick={() => openUserProfile?.({})}>
+              Open account &amp; password settings
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              This opens Clerk’s secure account portal so you can set or rotate your password after your first OTP login.
+            </p>
           </CardContent>
         </Card>
       </div>

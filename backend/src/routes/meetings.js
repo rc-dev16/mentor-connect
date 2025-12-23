@@ -2,30 +2,12 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const PDFDocument = require('pdfkit');
 const pool = require('../config/database');
+const authenticateRequest = require('../middleware/authenticate');
 
 const router = express.Router();
 
-// Middleware to verify JWT token
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
-  }
-
-  const jwt = require('jsonwebtoken');
-  jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret', (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid token' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
 // Apply authentication to all routes
-router.use(authenticateToken);
+router.use(authenticateRequest);
 // Get meetings visible to a mentee (by group membership or attendance)
 router.get('/for-mentee', async (req, res) => {
   try {

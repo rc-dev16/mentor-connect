@@ -3,62 +3,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const pool = require('../config/database');
+const authenticateRequest = require('../middleware/authenticate');
 
 const router = express.Router();
 
-// Login endpoint
+// Login endpoint (legacy) – instruct users to sign in via Clerk
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 })
 ], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, password } = req.body;
-
-    // Find user by email (case-insensitive)
-    const userQuery = 'SELECT * FROM users WHERE LOWER(email) = LOWER($1) AND is_active = true';
-    const userResult = await pool.query(userQuery, [email]);
-
-    if (userResult.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const user = userResult.rows[0];
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
-        userType: user.user_type 
-      },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
-
-    // Return user data (excluding password)
-    const { password_hash, ...userData } = user;
-    
-    res.json({
-      message: 'Login successful',
-      token,
-      user: userData
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  return res.status(410).json({ message: 'Password login has been disabled. Use Clerk email OTP to sign in.' });
 });
 
 // Register endpoint (for testing purposes)
@@ -123,27 +77,17 @@ router.post('/register', [
   }
 });
 
-// Verify token endpoint
-router.get('/verify', async (req, res) => {
+// Verify token endpoint (supports Clerk or legacy JWT)
+router.get('/verify', authenticateRequest, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    
-    // Get user data
     const userQuery = 'SELECT id, email, name, user_type, registration_number, department, phone, bio, created_at FROM users WHERE id = $1 AND is_active = true';
-    const userResult = await pool.query(userQuery, [decoded.userId]);
+    const userResult = await pool.query(userQuery, [req.user.userId]);
 
     if (userResult.rows.length === 0) {
       return res.status(401).json({ message: 'User not found' });
     }
 
     res.json({ user: userResult.rows[0] });
-
   } catch (error) {
     console.error('Token verification error:', error);
     res.status(401).json({ message: 'Invalid token' });

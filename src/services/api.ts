@@ -1,42 +1,40 @@
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('token');
+// Helper to get a Clerk session token for API calls
+const getClerkToken = async () => {
+  const clerk = (window as any)?.Clerk;
+  if (clerk?.session) {
+    try {
+      const template = import.meta.env.VITE_CLERK_JWT_TEMPLATE || undefined;
+      return await clerk.session.getToken(template ? { template } : undefined);
+    } catch (err) {
+      console.warn('[api] Failed to fetch Clerk token', err);
+    }
+  }
+  return null;
 };
 
-// Helper function to get headers with auth
-const getHeaders = () => {
-  const token = getAuthToken();
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
+// Helper function to get headers with auth (async for Clerk)
+const getHeaders = async (useJson = true) => {
+  const token = await getClerkToken();
+  const headers: Record<string, string> = {};
+  if (useJson) headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
 };
 
 // API service class
 class ApiService {
   // Auth endpoints
   async login(email: string, password: string) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
-    }
-    
-    return response.json();
+    throw new Error('Password login is disabled. Please sign in with Clerk using your email OTP.');
   }
 
   async verifyToken() {
     const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
-    
+
     if (!response.ok) {
       throw new Error('Token verification failed');
     }
@@ -47,7 +45,7 @@ class ApiService {
   // User endpoints
   async getUserProfile() {
     const response = await fetch(`${API_BASE_URL}/users/profile`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -60,7 +58,7 @@ class ApiService {
   async updateUserProfile(data: { phone?: string; cabin?: string; availability?: string; bio?: string }) {
     const response = await fetch(`${API_BASE_URL}/users/profile`, {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(data),
     });
     
@@ -74,7 +72,7 @@ class ApiService {
 
   async getMyMentor() {
     const response = await fetch(`${API_BASE_URL}/users/my-mentor`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch mentor');
     return response.json();
@@ -82,7 +80,7 @@ class ApiService {
 
   async getMentees() {
     const response = await fetch(`${API_BASE_URL}/users/mentees`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -96,7 +94,7 @@ class ApiService {
   async getMeetings(status?: string) {
     const url = status ? `${API_BASE_URL}/meetings?status=${status}` : `${API_BASE_URL}/meetings`;
     const response = await fetch(url, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -108,7 +106,7 @@ class ApiService {
 
   async getMeeting(id: string) {
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -121,7 +119,7 @@ class ApiService {
   async createMeeting(meetingData: any) {
     const response = await fetch(`${API_BASE_URL}/meetings`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(meetingData),
     });
     
@@ -136,7 +134,7 @@ class ApiService {
   async updateMeeting(id: string, meetingData: any) {
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(meetingData),
     });
     
@@ -151,7 +149,7 @@ class ApiService {
   async completeMeeting(id: string, comments: string, actionPoints: string, attendance: string[]) {
     const response = await fetch(`${API_BASE_URL}/meetings/${id}/complete`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify({ comments, actionPoints, attendance }),
     });
     
@@ -166,7 +164,7 @@ class ApiService {
   async deleteMeeting(id: string) {
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'DELETE',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -179,7 +177,7 @@ class ApiService {
   async downloadMeetingPDF(meetingId: string): Promise<Blob> {
     const response = await fetch(`${API_BASE_URL}/meetings/${meetingId}/download`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Failed to download meeting PDF' }));
@@ -190,7 +188,7 @@ class ApiService {
 
   async getMenteesList() {
     const response = await fetch(`${API_BASE_URL}/meetings/mentees/list`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -203,7 +201,7 @@ class ApiService {
   // Mentee-facing meetings
   async getMenteeMeetings(status?: string) {
     const url = status ? `${API_BASE_URL}/meetings/for-mentee?status=${status}` : `${API_BASE_URL}/meetings/for-mentee`;
-    const response = await fetch(url, { headers: getHeaders() });
+    const response = await fetch(url, { headers: await getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch mentee meetings');
     return response.json();
   }
@@ -211,7 +209,7 @@ class ApiService {
   // Resource endpoints
   async getResources() {
     const response = await fetch(`${API_BASE_URL}/resources`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -231,13 +229,9 @@ class ApiService {
     if (data.file) formData.append('resource_type', 'file');
     else if (data.url) formData.append('resource_type', 'link');
 
-    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/resources`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-        // Don't set Content-Type for FormData, browser will set it with boundary
-      },
+      headers: await getHeaders(false),
       body: formData,
     });
     
@@ -258,7 +252,7 @@ class ApiService {
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -272,7 +266,7 @@ class ApiService {
   // Report endpoints
   async getReports() {
     const response = await fetch(`${API_BASE_URL}/reports`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -284,7 +278,7 @@ class ApiService {
 
   async getDashboardStats() {
     const response = await fetch(`${API_BASE_URL}/users/dashboard/stats`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
 
     if (!response.ok) {
@@ -297,7 +291,7 @@ class ApiService {
   // Session Requests
   async getSessionRequests(status?: string) {
     const url = status ? `${API_BASE_URL}/session-requests?status=${status}` : `${API_BASE_URL}/session-requests`;
-    const response = await fetch(url, { headers: getHeaders() });
+    const response = await fetch(url, { headers: await getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch session requests');
     return response.json();
   }
@@ -311,7 +305,7 @@ class ApiService {
   }) {
     const response = await fetch(`${API_BASE_URL}/session-requests`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
@@ -328,7 +322,7 @@ class ApiService {
   async updateSessionRequestStatus(id: string, status: 'pending' | 'approved' | 'rejected', mentor_notes?: string) {
     const response = await fetch(`${API_BASE_URL}/session-requests/${id}/status`, {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify({ status, mentor_notes }),
     });
     if (!response.ok) throw new Error('Failed to update session request');
@@ -338,7 +332,7 @@ class ApiService {
   async deleteSessionRequest(id: string) {
     const response = await fetch(`${API_BASE_URL}/session-requests/${id}`, {
       method: 'DELETE',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to cancel session request');
     return response.json();
@@ -348,7 +342,7 @@ class ApiService {
   async getPersonalInfo() {
     const response = await fetch(`${API_BASE_URL}/personal-info`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch personal information');
     return response.json();
@@ -357,7 +351,7 @@ class ApiService {
   async savePersonalInfo(data: any) {
     const response = await fetch(`${API_BASE_URL}/personal-info`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -374,7 +368,7 @@ class ApiService {
   async getMenteeProfile(menteeId: string) {
     const response = await fetch(`${API_BASE_URL}/personal-info/mentee/${menteeId}`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch mentee profile');
     return response.json();
@@ -383,7 +377,7 @@ class ApiService {
   async downloadMenteesPersonalInfo(): Promise<Blob> {
     const response = await fetch(`${API_BASE_URL}/personal-info/mentees/export`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Failed to download mentees data' }));
@@ -395,7 +389,7 @@ class ApiService {
   async downloadMenteePersonalInfoPDF(menteeId: string): Promise<Blob> {
     const response = await fetch(`${API_BASE_URL}/personal-info/mentee/${menteeId}/pdf`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Failed to download PDF' }));
@@ -407,7 +401,7 @@ class ApiService {
   // Notification endpoints
   async getNotifications() {
     const response = await fetch(`${API_BASE_URL}/notifications`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -419,7 +413,7 @@ class ApiService {
 
   async getUnreadNotificationsCount() {
     const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -432,7 +426,7 @@ class ApiService {
   async markNotificationAsRead(notificationId: string) {
     const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {
@@ -445,7 +439,7 @@ class ApiService {
   async markAllNotificationsAsRead() {
     const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: await getHeaders(),
     });
     
     if (!response.ok) {

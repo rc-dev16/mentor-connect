@@ -1,7 +1,13 @@
 import { SignIn } from "@clerk/clerk-react";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Login = () => {
+  const location = useLocation();
+
+  // Make Clerk work both at "/" and "/login"
+  const clerkPath = location.pathname.startsWith("/login") ? "/login" : "/";
+
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-0 bg-cover bg-center bg-no-repeat bg-fixed" 
@@ -27,7 +33,7 @@ const Login = () => {
           <CardContent className="flex flex-col gap-6 pb-8">
             <div className="flex justify-center">
               <SignIn
-                path="/login"
+                path={clerkPath}
                 routing="path"
                 afterSignInUrl="/"
                 afterSignUpUrl="/"

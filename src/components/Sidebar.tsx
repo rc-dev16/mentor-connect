@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/" },
+  { icon: Home, label: "Dashboard", path: "/dashboard" },
   { icon: Calendar, label: "Meetings", path: "/meetings" },
   { icon: Users, label: "Mentorship Connect", path: "/mentorship-connect" },
   { icon: UserCircle, label: "Personal Info", path: "/personal-info" },

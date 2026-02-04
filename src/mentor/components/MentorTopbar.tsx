@@ -58,7 +58,7 @@ const MentorTopbar = ({ onMenuClick }: MentorTopbarProps) => {
 
         {/* Center: Heading */}
         <div className="flex-1 flex items-center justify-center">
-          <h1 className="text-2xl font-bold text-primary whitespace-nowrap uppercase">
+          <h1 className="text-2xl font-black text-primary whitespace-nowrap uppercase tracking-wide" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
             Mentor-Connect
           </h1>
         </div>

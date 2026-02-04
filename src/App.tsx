@@ -4,8 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { RedirectToSignIn, useUser, useClerk } from "@clerk/clerk-react";
-import { Button } from "@/components/ui/button";
+import { useUser } from "@clerk/clerk-react";
 import Layout from "./components/Layout";
 import MentorLayout from "./mentor/components/MentorLayout";
 import Login from "./pages/Login";
@@ -27,7 +26,6 @@ import { apiService } from "./services/api";
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole: 'mentor' | 'mentee' }) => {
   const { isLoaded, isSignedIn, user } = useUser();
-  const { openUserProfile } = useClerk();
   const [userType, setUserType] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
 
@@ -80,39 +78,31 @@ const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; 
   }
 
   if (!isSignedIn) {
-    return <RedirectToSignIn routing="path" path="/login" />;
+    return <Navigate to="/" replace />;
   }
 
   if (userType && userType !== allowedRole) {
-    return allowedRole === 'mentor' ? <Navigate to="/" /> : <Navigate to="/mentor/dashboard" />;
-  }
-
-  if (user && user.passwordEnabled === false) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-4 text-center border rounded-lg p-6 shadow-sm bg-card">
-          <h2 className="text-xl font-semibold">Set your password</h2>
-          <p className="text-sm text-muted-foreground">
-            For stronger security, please set a password now.
-          </p>
-          <Button onClick={() => openUserProfile?.({})} className="w-full">
-            Open account settings
-          </Button>
-        </div>
-      </div>
-    );
+    return allowedRole === 'mentor'
+      ? <Navigate to="/dashboard" replace />
+      : <Navigate to="/mentor/dashboard" replace />;
   }
 
   return <>{children}</>;
 };
 
 const LoginRoute = () => {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   if (!isLoaded) {
     return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading...</div>;
   }
   if (isSignedIn) {
-    return <Navigate to="/" replace />;
+    const clerkRole =
+      (user?.publicMetadata as any)?.userType ||
+      (user?.unsafeMetadata as any)?.role;
+    const cachedRole = sessionStorage.getItem("userType");
+    const role = (clerkRole as string) || cachedRole || "mentee";
+    const targetPath = role === "mentor" ? "/mentor/dashboard" : "/dashboard";
+    return <Navigate to={targetPath} replace />;
   }
   return <Login />;
 };
@@ -126,11 +116,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public login as main landing page */}
+          <Route path="/" element={<LoginRoute />} />
           <Route path="/login/*" element={<LoginRoute />} />
           
           {/* Protected Mentee Routes */}
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <ProtectedRoute allowedRole="mentee">
                 <Layout>

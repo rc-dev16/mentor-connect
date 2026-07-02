@@ -29,6 +29,8 @@ async function cleanupTestData() {
 
     // List of test user emails to remove
     const testEmails = [
+      'chawdarohan16@gmail.com',
+      'rohanc1604@gmail.com',
       'test.mentor@jaipur.manipal.edu',
       'test.mentee@muj.manipal.edu',
       'praveen.kr.shukla@jaipur.manipal.edu', // Old test user

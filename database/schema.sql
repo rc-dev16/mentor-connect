@@ -19,6 +19,9 @@ CREATE TABLE users (
     bio TEXT,
     profile_image_url VARCHAR(500),
     is_active BOOLEAN DEFAULT true,
+    clerk_user_id VARCHAR(255),
+    password_setup_completed BOOLEAN DEFAULT false,
+    last_login_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -156,6 +159,8 @@ CREATE TABLE notifications (
 
 -- Create indexes for better performance
 CREATE INDEX idx_users_email ON users(email);
+CREATE UNIQUE INDEX idx_users_clerk_user_id ON users(clerk_user_id) WHERE clerk_user_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_users_email_lower ON users(LOWER(email));
 CREATE INDEX idx_users_user_type ON users(user_type);
 CREATE INDEX idx_mentorship_mentor_id ON mentorship_relationships(mentor_id);
 CREATE INDEX idx_mentorship_mentee_id ON mentorship_relationships(mentee_id);

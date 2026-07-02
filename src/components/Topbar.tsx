@@ -11,7 +11,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiService from "@/services/api";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useClerk } from "@clerk/react";
+import { signOutWithClerk } from "@/auth/services/sign-out";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -19,7 +20,8 @@ interface TopbarProps {
 
 const Topbar = ({ onMenuClick }: TopbarProps) => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut } = useClerk();
+  const { userId } = useAuth();
   
   const [studentInfo, setStudentInfo] = useState<{ name: string; regNo: string }>({ name: "", regNo: "" });
   useEffect(() => {
@@ -27,7 +29,9 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
       try {
         const p = await apiService.getUserProfile();
         setStudentInfo({ name: p?.name || "", regNo: p?.registration_number || "" });
-      } catch {}
+      } catch (error) {
+        console.error('Error loading student profile:', error);
+      }
     };
     load();
   }, []);
@@ -81,12 +85,7 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
               <DropdownMenuItem
                 className="gap-2 text-red-600"
                 onClick={async () => {
-                  try {
-                    sessionStorage.removeItem('userType');
-                    await signOut?.({ redirectUrl: '/login' });
-                  } catch {
-                    navigate('/login');
-                  }
+                  await signOutWithClerk(signOut, userId || undefined);
                 }}
               >
                 <LogOut className="h-4 w-4" />

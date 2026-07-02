@@ -10,11 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { apiService } from "@/services/api";
-import { useClerk } from "@clerk/clerk-react";
 
 const Settings = () => {
   const { toast } = useToast();
-  const { openUserProfile } = useClerk();
   const [profile, setProfile] = useState<{ 
     name: string; 
     email: string; 
@@ -203,13 +201,10 @@ const Settings = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Sign in with your email OTP, then set a password once you are logged in.
+              Sign in with email code or the password you set after your first login.
             </p>
-            <Button onClick={() => openUserProfile?.({})}>
-              Open account &amp; password settings
-            </Button>
             <p className="text-xs text-muted-foreground">
-              This opens Clerk’s secure account portal so you can set or rotate your password after your first OTP login.
+              Passwords are managed securely by Clerk; Mentor-Connect only stores your app role and profile.
             </p>
           </CardContent>
         </Card>

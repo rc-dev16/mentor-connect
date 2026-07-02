@@ -8,7 +8,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useAuth, useClerk } from "@clerk/react";
 import { apiService } from "@/services/api";
+import { signOutWithClerk } from "@/auth/services/sign-out";
 
 interface MentorTopbarProps {
   onMenuClick: () => void;
@@ -16,11 +18,12 @@ interface MentorTopbarProps {
 
 const MentorTopbar = ({ onMenuClick }: MentorTopbarProps) => {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
+  const { userId } = useAuth();
   const [mentorInfo, setMentorInfo] = useState({
     name: "Loading...",
     email: "Loading..."
   });
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadMentorInfo = async () => {
@@ -32,8 +35,6 @@ const MentorTopbar = ({ onMenuClick }: MentorTopbarProps) => {
         });
       } catch (error) {
         console.error('Error loading mentor profile:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -84,7 +85,12 @@ const MentorTopbar = ({ onMenuClick }: MentorTopbarProps) => {
                 <Settings className="h-4 w-4" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/login")} className="gap-2 text-red-600">
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOutWithClerk(signOut, userId || undefined);
+                }}
+                className="gap-2 text-red-600"
+              >
                 <LogOut className="h-4 w-4" />
                 Logout
               </DropdownMenuItem>

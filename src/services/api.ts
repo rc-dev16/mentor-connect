@@ -1,22 +1,25 @@
+import { getClerkSessionToken } from '@/auth/services/clerk-token';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+type JsonPayload = Record<string, unknown>;
 
-// Helper to get a Clerk session token for API calls
-const getClerkToken = async () => {
-  const clerk = (window as any)?.Clerk;
-  if (clerk?.session) {
-    try {
-      const template = import.meta.env.VITE_CLERK_JWT_TEMPLATE || undefined;
-      return await clerk.session.getToken(template ? { template } : undefined);
-    } catch (err) {
-      // Silent fail - token fetch error
-    }
+async function parseApiError(response: Response, fallback: string): Promise<never> {
+  let message = fallback;
+  try {
+    const data = await response.json();
+    if (data?.message) message = data.message;
+  } catch {
+    // ignore
   }
-  return null;
-};
+  throw new Error(message);
+}
 
-// Helper function to get headers with auth (async for Clerk)
+// Helper function to get headers with the active Clerk session token.
 const getHeaders = async (useJson = true) => {
-  const token = await getClerkToken();
+  const token = await getClerkSessionToken();
+  if (!token) {
+    throw new Error('Missing Clerk session token. Please sign in again.');
+  }
   const headers: Record<string, string> = {};
   if (useJson) headers['Content-Type'] = 'application/json';
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -25,23 +28,6 @@ const getHeaders = async (useJson = true) => {
 
 // API service class
 class ApiService {
-  // Auth endpoints
-  async login(email: string, password: string) {
-    throw new Error('Password login is disabled. Please sign in with Clerk using your email OTP.');
-  }
-
-  async verifyToken() {
-    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-      headers: await getHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Token verification failed');
-    }
-    
-    return response.json();
-  }
-
   // User endpoints
   async getUserProfile() {
     const response = await fetch(`${API_BASE_URL}/users/profile`, {
@@ -49,7 +35,7 @@ class ApiService {
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
+      await parseApiError(response, 'Failed to fetch user profile');
     }
     
     return response.json();
@@ -116,7 +102,7 @@ class ApiService {
     return response.json();
   }
 
-  async createMeeting(meetingData: any) {
+  async createMeeting(meetingData: JsonPayload) {
     const response = await fetch(`${API_BASE_URL}/meetings`, {
       method: 'POST',
       headers: await getHeaders(),
@@ -131,7 +117,7 @@ class ApiService {
     return response.json();
   }
 
-  async updateMeeting(id: string, meetingData: any) {
+  async updateMeeting(id: string, meetingData: JsonPayload) {
     const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
       method: 'PUT',
       headers: await getHeaders(),
@@ -313,7 +299,9 @@ class ApiService {
       try {
         const data = await response.json();
         if (data?.message) msg = data.message;
-      } catch {}
+      } catch {
+        // Response body is optional; keep the fallback message.
+      }
       throw new Error(msg);
     }
     return response.json();
@@ -348,7 +336,7 @@ class ApiService {
     return response.json();
   }
 
-  async savePersonalInfo(data: any) {
+  async savePersonalInfo(data: JsonPayload) {
     const response = await fetch(`${API_BASE_URL}/personal-info`, {
       method: 'POST',
       headers: await getHeaders(),
@@ -359,7 +347,9 @@ class ApiService {
       try {
         const errorData = await response.json();
         if (errorData?.message) msg = errorData.message;
-      } catch {}
+      } catch {
+        // Response body is optional; keep the fallback message.
+      }
       throw new Error(msg);
     }
     return response.json();

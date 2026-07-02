@@ -27,8 +27,8 @@ async function createTestUsers() {
     // Create Test Mentor
     // ============================================
     console.log('Creating test mentor...');
-    const mentorEmail = 'test.mentor@jaipur.manipal.edu';
-    const mentorName = 'Dr. Test Mentor';
+    const mentorEmail = 'chawdarohan16@gmail.com';
+    const mentorName = 'Rohan Chawda Test Mentor';
     
     // Check if mentor exists
     const mentorCheck = await client.query(
@@ -42,15 +42,16 @@ async function createTestUsers() {
       await client.query(
         `UPDATE users 
          SET name = $1, user_type = 'mentor', registration_number = $2, 
-             department = $3, is_active = true
+             department = $3, is_active = true,
+             password_setup_completed = COALESCE(password_setup_completed, false)
          WHERE id = $4`,
         [mentorName, 'FAC_TEST_001', 'Computer Science', mentorId]
       );
       console.log('✓ Test mentor updated');
     } else {
       const mentorResult = await client.query(
-        `INSERT INTO users (email, password_hash, name, user_type, registration_number, department, is_active)
-         VALUES ($1, '', $2, 'mentor', $3, $4, true)
+        `INSERT INTO users (email, password_hash, name, user_type, registration_number, department, is_active, password_setup_completed)
+         VALUES ($1, '', $2, 'mentor', $3, $4, true, false)
          RETURNING id`,
         [mentorEmail, mentorName, 'FAC_TEST_001', 'Computer Science']
       );
@@ -62,8 +63,8 @@ async function createTestUsers() {
     // Create Test Mentee
     // ============================================
     console.log('Creating test mentee...');
-    const menteeEmail = 'test.mentee@muj.manipal.edu';
-    const menteeName = 'Test Student';
+    const menteeEmail = 'rohanc1604@gmail.com';
+    const menteeName = 'Rohan C Test Mentee';
     
     // Check if mentee exists
     const menteeCheck = await client.query(
@@ -77,15 +78,16 @@ async function createTestUsers() {
       await client.query(
         `UPDATE users 
          SET name = $1, user_type = 'mentee', registration_number = $2, 
-             department = $3, is_active = true
+             department = $3, is_active = true,
+             password_setup_completed = COALESCE(password_setup_completed, false)
          WHERE id = $4`,
         [menteeName, '23FE10CII99999', 'Computer Science', menteeId]
       );
       console.log('✓ Test mentee updated');
     } else {
       const menteeResult = await client.query(
-        `INSERT INTO users (email, password_hash, name, user_type, registration_number, department, is_active)
-         VALUES ($1, '', $2, 'mentee', $3, $4, true)
+        `INSERT INTO users (email, password_hash, name, user_type, registration_number, department, is_active, password_setup_completed)
+         VALUES ($1, '', $2, 'mentee', $3, $4, true, false)
          RETURNING id`,
         [menteeEmail, menteeName, '23FE10CII99999', 'Computer Science']
       );
@@ -134,9 +136,9 @@ async function createTestUsers() {
     console.log(`  Name: ${menteeName}`);
     console.log('\n------------------');
     console.log('\n⚠️  IMPORTANT:');
-    console.log('1. Sign up these emails in Clerk Dashboard first');
-    console.log('2. Use Clerk email OTP to sign in');
-    console.log('3. These users are now linked in a mentorship relationship');
+    console.log('1. Use Clerk email OTP for first login');
+    console.log('2. Set a password after OTP login');
+    console.log('3. These users are linked in a mentorship relationship');
     console.log('='.repeat(50) + '\n');
 
   } catch (error) {

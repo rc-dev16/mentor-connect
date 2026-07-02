@@ -2,9 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const { clerkMiddleware } = require('@clerk/express');
 require('dotenv').config({ path: './config.env' });
 
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./auth/auth.routes');
 const userRoutes = require('./routes/users');
 const meetingRoutes = require('./routes/meetings');
 const resourceRoutes = require('./routes/resources');
@@ -18,17 +19,53 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: [
-    process.env.CORS_ORIGIN || 'http://localhost:5173',
-    'http://localhost:8081',
-    'http://localhost:5173'
-  ],
-  credentials: true
-}));
+
+const defaultOrigins = [
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+  'http://localhost:8081',
+  'http://127.0.0.1:8081',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+const envOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+const localhostOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const envAuthorizedParties = (process.env.CLERK_AUTHORIZED_PARTIES || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const clerkAuthorizedParties = [...new Set([...defaultOrigins, ...envAuthorizedParties])];
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser clients (curl, mobile apps) with no Origin header
+    if (!origin || allowedOrigins.includes(origin) || localhostOriginPattern.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked origin: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(clerkMiddleware({
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
+  secretKey: process.env.CLERK_SECRET_KEY,
+  authorizedParties: clerkAuthorizedParties,
+  audience: undefined,
+}));
 
 // Routes
 app.use('/api/auth', authRoutes);

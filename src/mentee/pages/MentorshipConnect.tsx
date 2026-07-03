@@ -23,12 +23,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
-import apiService from "@/services/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSessionRequests } from "@/data/hooks/useSessionRequests";
+import { useSessionRequestMutations } from "@/data/hooks/mutations/useSessionRequestMutations";
 
 const MentorshipConnect = () => {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: requests = [], isLoading: loading } = useSessionRequests();
+  const { createSessionRequest, deleteSessionRequest } = useSessionRequestMutations();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
   const form = useForm({
@@ -41,77 +42,46 @@ const MentorshipConnect = () => {
     }
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: {
+    title: string;
+    description: string;
+    preferred_date: string;
+    preferred_time: string;
+    duration_minutes: number;
+  }) => {
     try {
-      const payload: any = { ...data };
-      // enforce required date/time
-      if (!payload.preferred_date || !payload.preferred_time) {
-        console.error('Date and time are required');
+      if (!data.preferred_date || !data.preferred_time) {
+        console.error("Date and time are required");
         return;
       }
-      await apiService.createSessionRequest(payload);
-      const list = await apiService.getSessionRequests();
-      setRequests(list);
+      await createSessionRequest.mutateAsync(data);
       form.reset();
       setIsDialogOpen(false);
     } catch (e) {
-      console.error('[MentorshipConnect] createSessionRequest error', e);
+      console.error("[MentorshipConnect] createSessionRequest error", e);
     }
   };
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const list = await apiService.getSessionRequests();
-        setRequests(list);
-      } catch (e) {
-        setRequests([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  const pendingRequests = [
-    {
-      id: 1,
-      topic: "Career Path Discussion",
-      preferredTime: "2025-10-10 14:00",
-      status: "Pending",
-      requestedOn: "2025-10-01"
-    },
-    {
-      id: 2,
-      topic: "Project Guidance",
-      preferredTime: "2025-10-12 11:00",
-      status: "Pending",
-      requestedOn: "2025-10-02"
-    }
-  ];
-
   const formatDateDMY = (iso?: string) => {
     if (!iso) return "-";
-    const [y, m, d] = iso.slice(0, 10).split('-');
+    const [y, m, d] = iso.slice(0, 10).split("-");
     return `${d}-${m}-${y}`;
   };
 
   const formatTimeHM = (time?: string) => {
     if (!time) return "";
-    return time.slice(0,5);
+    return time.slice(0, 5);
   };
 
-  // Fix timezone shift when selecting dates: use local YYYY-MM-DD
   const toLocalYMD = (date: Date) => {
     const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   };
   const parseYMDToDate = (ymd?: string) => {
     if (!ymd) return undefined;
-    const [y, m, d] = ymd.split('-').map((v) => parseInt(v, 10));
+    const [y, m, d] = ymd.split("-").map((v) => parseInt(v, 10));
     if (!y || !m || !d) return undefined;
     return new Date(y, m - 1, d);
   };
@@ -182,10 +152,10 @@ const MentorshipConnect = () => {
                             }}
                             disabled={(date) => {
                               const today = new Date();
-                              today.setHours(0,0,0,0);
+                              today.setHours(0, 0, 0, 0);
                               const d = new Date(date);
-                              d.setHours(0,0,0,0);
-                              return d < today; // disable past dates
+                              d.setHours(0, 0, 0, 0);
+                              return d < today;
                             }}
                             classNames={{
                               day_today: "border border-orange-500 text-foreground",
@@ -202,22 +172,22 @@ const MentorshipConnect = () => {
                   control={form.control}
                   name="preferred_time"
                   render={({ field }) => {
-                    const to24h = (h12: number, minutes: number, period: 'AM' | 'PM') => {
+                    const to24h = (h12: number, minutes: number, period: "AM" | "PM") => {
                       let h = h12 % 12;
-                      if (period === 'PM') h += 12;
-                      return `${String(h).padStart(2,'0')}:${String(minutes).padStart(2,'0')}`;
+                      if (period === "PM") h += 12;
+                      return `${String(h).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
                     };
                     const from24h = (value?: string) => {
-                      if (!value) return { h12: 9, minutes: 0, period: 'AM' as 'AM' | 'PM' };
-                      const [hStr, mStr] = value.split(':');
-                      let h = parseInt(hStr || '9', 10);
-                      const minutes = parseInt(mStr || '0', 10);
-                      const period = h >= 12 ? 'PM' : 'AM';
+                      if (!value) return { h12: 9, minutes: 0, period: "AM" as "AM" | "PM" };
+                      const [hStr, mStr] = value.split(":");
+                      let h = parseInt(hStr || "9", 10);
+                      const minutes = parseInt(mStr || "0", 10);
+                      const period = h >= 12 ? "PM" : "AM";
                       h = h % 12; if (h === 0) h = 12;
                       return { h12: h, minutes, period };
                     };
                     const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-                    const minutesOpts = Array.from({ length: 12 }, (_, i) => i * 5); // 0..55 step 5
+                    const minutesOpts = Array.from({ length: 12 }, (_, i) => i * 5);
                     const state = from24h(field.value);
                     return (
                       <FormItem>
@@ -230,11 +200,11 @@ const MentorshipConnect = () => {
                                 className="h-9 rounded-md border bg-background px-2"
                                 value={state.h12}
                                 onChange={(e) => {
-                                  const next = to24h(parseInt(e.target.value,10), state.minutes, (state.period === 'AM' ? 'AM' : 'PM'));
+                                  const next = to24h(parseInt(e.target.value, 10), state.minutes, state.period);
                                   field.onChange(next);
                                 }}
                               >
-                                {hours.map(h => (
+                                {hours.map((h) => (
                                   <option key={h} value={h}>{h}</option>
                                 ))}
                               </select>
@@ -243,19 +213,19 @@ const MentorshipConnect = () => {
                                 className="h-9 rounded-md border bg-background px-2"
                                 value={state.minutes}
                                 onChange={(e) => {
-                                  const next = to24h(state.h12, parseInt(e.target.value,10), state.period as 'AM'|'PM');
+                                  const next = to24h(state.h12, parseInt(e.target.value, 10), state.period as "AM" | "PM");
                                   field.onChange(next);
                                 }}
                               >
-                                {minutesOpts.map(m => (
-                                  <option key={m} value={m}>{String(m).padStart(2,'0')}</option>
+                                {minutesOpts.map((m) => (
+                                  <option key={m} value={m}>{String(m).padStart(2, "0")}</option>
                                 ))}
                               </select>
                               <select
                                 className="h-9 rounded-md border bg-background px-2"
                                 value={state.period}
                                 onChange={(e) => {
-                                  const period = (e.target.value === 'AM' ? 'AM' : 'PM') as 'AM'|'PM';
+                                  const period = (e.target.value === "AM" ? "AM" : "PM") as "AM" | "PM";
                                   const next = to24h(state.h12, state.minutes, period);
                                   field.onChange(next);
                                 }}
@@ -284,8 +254,9 @@ const MentorshipConnect = () => {
                     </FormItem>
                   )}
                 />
-                {/* mentor inferred from active relationship */}
-                <Button type="submit" className="w-full">Submit Request</Button>
+                <Button type="submit" className="w-full" disabled={createSessionRequest.isPending}>
+                  {createSessionRequest.isPending ? "Submitting..." : "Submit Request"}
+                </Button>
               </form>
             </Form>
           </DialogContent>
@@ -333,18 +304,17 @@ const MentorshipConnect = () => {
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center gap-2">
-                  {request.status === 'pending' && (
+                  {request.status === "pending" && (
                     <Button
                       variant="outline"
                       size="sm"
                       className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                      disabled={deleteSessionRequest.isPending}
                       onClick={async () => {
                         try {
-                          await apiService.deleteSessionRequest(request.id);
-                          const list = await apiService.getSessionRequests();
-                          setRequests(list);
+                          await deleteSessionRequest.mutateAsync(request.id);
                         } catch (e) {
-                          console.error('Cancel request failed', e);
+                          console.error("Cancel request failed", e);
                         }
                       }}
                     >
@@ -352,12 +322,12 @@ const MentorshipConnect = () => {
                     </Button>
                   )}
                   <Badge variant="secondary" className="tracking-wider">
-                    {(request.status || '').toString().toUpperCase()}
+                    {(request.status || "").toString().toUpperCase()}
                   </Badge>
-                  {request.status === 'approved' && request.mentor_notes && (
+                  {request.status === "approved" && request.mentor_notes && (
                     <Button
                       size="sm"
-                      onClick={() => window.open(request.mentor_notes, '_blank')}
+                      onClick={() => window.open(request.mentor_notes, "_blank")}
                     >
                       Join
                     </Button>
@@ -402,4 +372,3 @@ const MentorshipConnect = () => {
 };
 
 export default MentorshipConnect;
-

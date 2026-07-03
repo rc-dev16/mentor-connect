@@ -21,11 +21,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { apiService } from "@/services/api"
 import { useToast } from "@/components/ui/use-toast"
+import { useMeetings, useMenteesList } from "@/data/hooks/useMeetings"
+import { useMeetingMutations } from "@/data/hooks/mutations/useMeetingMutations"
+import { meetingsApi } from "@/data/api/meetings.api"
 
 const scheduleFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -56,30 +58,47 @@ interface Meeting {
   status: 'upcoming' | 'completed'
 }
 
+const mapMeeting = (m: any): Meeting => ({
+  id: m.id,
+  date: typeof m.meeting_date === 'string' ? m.meeting_date.slice(0, 10) : m.meeting_date,
+  time: (m.meeting_time || '').slice(0, 5),
+  topic: m.topic || m.title,
+  agenda: m.agenda,
+  teamsLink: m.teams_link,
+  comments: m.comments,
+  actionPoints: m.action_points,
+  attendance: m.attendance,
+  status: m.status === 'completed' ? 'completed' : 'upcoming',
+  duration_minutes: m.duration_minutes,
+})
+
 const MeetingsPage = () => {
   const { toast } = useToast()
+  const { data: meetingsData = [], isLoading: meetingsLoading, isError: meetingsError } = useMeetings()
+  const { data: menteesList = [], isLoading: menteesLoading } = useMenteesList()
+  const { createMeeting, updateMeeting, completeMeeting, deleteMeeting } = useMeetingMutations()
+
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
-  const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([])
-  const [completedMeetings, setCompletedMeetings] = useState<Meeting[]>([])
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false)
-  const [menteesList, setMenteesList] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [downloadingMeetingId, setDownloadingMeetingId] = useState<string | null>(null)
-  
-  const mapMeeting = (m: any): Meeting => ({
-    id: m.id,
-    date: typeof m.meeting_date === 'string' ? m.meeting_date.slice(0, 10) : m.meeting_date,
-    time: (m.meeting_time || '').slice(0, 5),
-    topic: m.topic || m.title,
-    agenda: m.agenda,
-    teamsLink: m.teams_link,
-    comments: m.comments,
-    actionPoints: m.action_points,
-    attendance: m.attendance,
-    status: m.status === 'completed' ? 'completed' : 'upcoming',
-    duration_minutes: m.duration_minutes,
-  })
+  const [localCompletedOverrides, setLocalCompletedOverrides] = useState<Record<string, Partial<Meeting>>>({})
+
+  const upcomingMeetings = useMemo(
+    () => (meetingsData as any[]).filter((m) => m.status === 'scheduled').map(mapMeeting),
+    [meetingsData]
+  )
+
+  const completedMeetings = useMemo(
+    () =>
+      (meetingsData as any[])
+        .filter((m) => m.status === 'completed')
+        .map(mapMeeting)
+        .map((m) => ({ ...m, ...localCompletedOverrides[m.id] })),
+    [meetingsData, localCompletedOverrides]
+  )
+
+  const isLoading = meetingsLoading || menteesLoading
 
   const formatDateDMY = (isoDate: string | undefined) => {
     if (!isoDate) return "";
@@ -104,43 +123,6 @@ const MeetingsPage = () => {
     },
   })
 
-  // Load data from API
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true)
-        
-        // Load meetings
-        const meetings = await apiService.getMeetings()
-        const upcoming = meetings
-          .filter((m: any) => m.status === 'scheduled')
-          .map(mapMeeting)
-        const completed = meetings
-          .filter((m: any) => m.status === 'completed')
-          .map(mapMeeting)
-        
-        setUpcomingMeetings(upcoming)
-        setCompletedMeetings(completed)
-        
-        // Load mentees list
-        const mentees = await apiService.getMenteesList()
-        setMenteesList(mentees)
-        
-      } catch (error) {
-        console.error('Error loading data:', error)
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load meetings data",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadData()
-  }, [toast])
-
   const onSubmit = async (data: z.infer<typeof scheduleFormSchema>) => {
     try {
       const meetingData = {
@@ -154,33 +136,19 @@ const MeetingsPage = () => {
       }
 
       if (editingMeeting) {
-        // Update existing meeting
-        await apiService.updateMeeting(editingMeeting.id, meetingData)
+        await updateMeeting.mutateAsync({ id: editingMeeting.id, data: meetingData })
         setEditingMeeting(null)
         toast({
           title: "Success",
           description: "Meeting updated successfully",
         })
       } else {
-        // Create new meeting
-        await apiService.createMeeting(meetingData)
+        await createMeeting.mutateAsync(meetingData)
         toast({
           title: "Success",
           description: "Meeting scheduled successfully",
         })
       }
-
-      // Reload data
-      const meetings = await apiService.getMeetings()
-      const upcoming = meetings
-        .filter((m: any) => m.status === 'scheduled')
-        .map(mapMeeting)
-      const completed = meetings
-        .filter((m: any) => m.status === 'completed')
-        .map(mapMeeting)
-      
-      setUpcomingMeetings(upcoming)
-      setCompletedMeetings(completed)
 
       setIsScheduleModalOpen(false)
       form.reset()
@@ -209,8 +177,7 @@ const MeetingsPage = () => {
 
   const handleCancelMeeting = async (meetingId: string) => {
     try {
-      await apiService.deleteMeeting(meetingId)
-      setUpcomingMeetings(meetings => meetings.filter(m => m.id !== meetingId))
+      await deleteMeeting.mutateAsync(meetingId)
       toast({
         title: "Success",
         description: "Meeting cancelled successfully",
@@ -227,7 +194,6 @@ const MeetingsPage = () => {
 
   const handleViewMeeting = (meeting: Meeting) => {
     setEditingMeeting(meeting)
-    // Pre-populate form with existing data
     notesForm.reset({
       comments: meeting.comments || "",
       actionPoints: meeting.actionPoints || "",
@@ -237,27 +203,13 @@ const MeetingsPage = () => {
   }
 
   const handleMarkComplete = (meeting: Meeting) => {
-    // Open the notes modal to add notes and attendance
     setEditingMeeting(meeting)
     setIsNotesModalOpen(true)
   }
 
   const handleCompleteMeeting = async (meeting: Meeting, comments: string, actionPoints: string, attendance: string[]) => {
     try {
-      await apiService.completeMeeting(meeting.id, comments, actionPoints, attendance)
-      
-      // Reload data
-      const meetings = await apiService.getMeetings()
-      const upcoming = meetings
-        .filter((m: any) => m.status === 'scheduled')
-        .map(mapMeeting)
-      const completed = meetings
-        .filter((m: any) => m.status === 'completed')
-        .map(mapMeeting)
-      
-      setUpcomingMeetings(upcoming)
-      setCompletedMeetings(completed)
-      
+      await completeMeeting.mutateAsync({ id: meeting.id, comments, actionPoints, attendance })
       toast({
         title: "Success",
         description: "Meeting completed successfully",
@@ -275,9 +227,8 @@ const MeetingsPage = () => {
   const handleDownloadMeetingPDF = async (meetingId: string, meetingTitle: string) => {
     try {
       setDownloadingMeetingId(meetingId)
-      const blob = await apiService.downloadMeetingPDF(meetingId)
+      const blob = await meetingsApi.downloadMeetingPDF(meetingId)
       
-      // Create download link
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -311,6 +262,16 @@ const MeetingsPage = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Loading meetings...</p>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (meetingsError) {
+    return (
+      <div className="p-6">
+        <div className="flex justify-center items-center h-64">
+          <p className="text-destructive">Failed to load meetings data</p>
         </div>
       </div>
     )
@@ -623,8 +584,6 @@ const MeetingsPage = () => {
                 )}
               />
 
-              {/* Mentee group removed per requirements */}
-
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit">{editingMeeting ? 'Edit Meeting' : 'Schedule Meeting'}</Button>
               </div>
@@ -649,17 +608,16 @@ const MeetingsPage = () => {
             <form onSubmit={notesForm.handleSubmit((data) => {
               if (editingMeeting) {
                 if (editingMeeting.status === 'upcoming') {
-                  // Completing an upcoming meeting
                   handleCompleteMeeting(editingMeeting, data.comments, data.actionPoints, data.attendance)
                 } else {
-                  // Updating an existing completed meeting
-                  setCompletedMeetings(meetings =>
-                    meetings.map(m => 
-                      m.id === editingMeeting.id 
-                        ? { ...m, comments: data.comments, actionPoints: data.actionPoints, attendance: data.attendance }
-                        : m
-                    )
-                  )
+                  setLocalCompletedOverrides((prev) => ({
+                    ...prev,
+                    [editingMeeting.id]: {
+                      comments: data.comments,
+                      actionPoints: data.actionPoints,
+                      attendance: data.attendance,
+                    },
+                  }))
                 }
                 setIsNotesModalOpen(false)
                 notesForm.reset()
@@ -705,7 +663,6 @@ const MeetingsPage = () => {
                 render={() => (
                   <FormItem>
                     <FormLabel>Mark Attendance</FormLabel>
-                    {/* Mark all present toggle */}
                     <div className="mb-2">
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
@@ -730,7 +687,7 @@ const MeetingsPage = () => {
                     </div>
 
                     <div className="space-y-2 max-h-[40vh] overflow-auto pr-2">
-                      {menteesList.map((mentee) => (
+                      {menteesList.map((mentee: any) => (
                           <FormField
                             key={mentee.id}
                             control={notesForm.control}

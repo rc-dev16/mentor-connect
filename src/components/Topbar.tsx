@@ -9,10 +9,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import apiService from "@/services/api";
 import { useAuth, useClerk } from "@clerk/react";
 import { signOutWithClerk } from "@/auth/services/sign-out";
+import { useProfile } from "@/data/hooks/useProfile";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -22,19 +21,13 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const { userId } = useAuth();
-  
-  const [studentInfo, setStudentInfo] = useState<{ name: string; regNo: string }>({ name: "", regNo: "" });
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const p = await apiService.getUserProfile();
-        setStudentInfo({ name: p?.name || "", regNo: p?.registration_number || "" });
-      } catch (error) {
-        console.error('Error loading student profile:', error);
-      }
-    };
-    load();
-  }, []);
+  const { data: profile } = useProfile();
+
+  const studentInfo = {
+    name: profile?.name || "",
+    regNo: profile?.registration_number || "",
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-50 shadow-sm">
       <div className="flex items-center h-full px-4 gap-4">
@@ -43,53 +36,47 @@ const Topbar = ({ onMenuClick }: TopbarProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={onMenuClick}
             className="lg:hidden"
+            onClick={onMenuClick}
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <img src="/logo.png" alt="Logo" className="h-14 w-auto object-contain" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">MC</span>
+            </div>
+            <span className="font-semibold text-lg hidden sm:inline">Mentor-Connect</span>
+          </div>
         </div>
 
-        {/* Center: Heading */}
-        <div className="flex-1 flex items-center justify-center">
-          <h1 className="text-2xl font-black text-primary whitespace-nowrap uppercase tracking-wide" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-            Mentor-Connect
-          </h1>
-        </div>
-
-        {/* Right: Profile */}
-        <div className="flex items-center">
+        {/* Right: User Menu */}
+        <div className="ml-auto flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 w-auto max-w-[320px] md:max-w-[420px]">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                <div className="hidden md:block text-left flex-1">
-                  <p className="text-sm font-medium leading-snug whitespace-normal break-words">{studentInfo.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1 whitespace-normal break-words">{studentInfo.regNo}</p>
-                </div>
+              <Button variant="ghost" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">{studentInfo.name || "Student"}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => navigate("/personal-info")} className="gap-2">
-                <User className="h-4 w-4" />
-                Personal Info
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2">
-                <Settings className="h-4 w-4" />
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>{studentInfo.name || "Student"}</span>
+                  {studentInfo.regNo && (
+                    <span className="text-xs text-muted-foreground font-normal">
+                      Reg: {studentInfo.regNo}
+                    </span>
+                  )}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 text-red-600"
-                onClick={async () => {
-                  await signOutWithClerk(signOut, userId || undefined);
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
+              <DropdownMenuItem onClick={() => signOutWithClerk(signOut, userId || undefined)}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

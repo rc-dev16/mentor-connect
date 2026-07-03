@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Mail, Phone, Calendar, User, GraduationCap, Download } from "lucide-react";
-import { apiService } from "@/services/api";
+import { Search, Mail, Phone, User, GraduationCap, Download } from "lucide-react";
+import { useMentees } from "@/data/hooks/useProfile";
+import { personalInfoApi } from "@/data/api/personal-info.api";
 import MenteeProfileDialog from "../components/MenteeProfileDialog";
 
 interface Mentee {
@@ -22,68 +23,25 @@ interface Mentee {
 
 const MenteesPage = () => {
   const { toast } = useToast();
-  const [mentees, setMentees] = useState<Mentee[]>([]);
-  const [filteredMentees, setFilteredMentees] = useState<Mentee[]>([]);
+  const { data: mentees = [], isLoading } = useMentees();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedMenteeId, setSelectedMenteeId] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Load mentees from API
-  useEffect(() => {
-    const loadMentees = async () => {
-      try {
-        setIsLoading(true);
-        const menteesData = await apiService.getMentees();
-        setMentees(menteesData);
-        setFilteredMentees(menteesData);
-      } catch (error) {
-        console.error('Error loading mentees:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load mentees data",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const typedMentees = mentees as Mentee[];
 
-    loadMentees();
-  }, [toast]);
-
-  // Filter mentees based on search term
-  useEffect(() => {
-    const filtered = mentees.filter(mentee =>
-      mentee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentee.registration_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentee.department.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMentees = useMemo(() => {
+    if (!searchTerm) return typedMentees;
+    const term = searchTerm.toLowerCase();
+    return typedMentees.filter(
+      (mentee) =>
+        mentee.name.toLowerCase().includes(term) ||
+        mentee.registration_number.toLowerCase().includes(term) ||
+        mentee.email.toLowerCase().includes(term) ||
+        mentee.department.toLowerCase().includes(term)
     );
-    setFilteredMentees(filtered);
-  }, [searchTerm, mentees]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  }, [searchTerm, typedMentees]);
 
   const handleViewProfile = (menteeId: string) => {
     setSelectedMenteeId(menteeId);
@@ -98,13 +56,12 @@ const MenteesPage = () => {
   const handleDownloadMenteesInfo = async () => {
     try {
       setIsDownloading(true);
-      const blob = await apiService.downloadMenteesPersonalInfo();
-      
-      // Create download link
+      const blob = await personalInfoApi.downloadMenteesPersonalInfo();
+
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `mentees_personal_info_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `mentees_personal_info_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -112,10 +69,10 @@ const MenteesPage = () => {
 
       toast({
         title: "Download Successful",
-        description: `Personal information for ${mentees.length} mentee(s) has been downloaded.`,
+        description: `Personal information for ${typedMentees.length} mentee(s) has been downloaded.`,
       });
     } catch (error) {
-      console.error('Error downloading mentees data:', error);
+      console.error("Error downloading mentees data:", error);
       toast({
         variant: "destructive",
         title: "Download Failed",
@@ -150,9 +107,9 @@ const MenteesPage = () => {
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary" className="text-sm">
-            {mentees.length} Total Mentees
+            {typedMentees.length} Total Mentees
           </Badge>
-          {mentees.length > 0 && (
+          {typedMentees.length > 0 && (
             <Button
               onClick={handleDownloadMenteesInfo}
               disabled={isDownloading}
@@ -166,7 +123,6 @@ const MenteesPage = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -179,19 +135,17 @@ const MenteesPage = () => {
         </div>
       </div>
 
-      {/* Mentees Grid */}
       {filteredMentees.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {searchTerm ? 'No mentees found' : 'No mentees assigned'}
+              {searchTerm ? "No mentees found" : "No mentees assigned"}
             </h3>
             <p className="text-muted-foreground">
-              {searchTerm 
-                ? 'Try adjusting your search terms'
-                : 'You don\'t have any mentees assigned yet'
-              }
+              {searchTerm
+                ? "Try adjusting your search terms"
+                : "You don't have any mentees assigned yet"}
             </p>
           </CardContent>
         </Card>
@@ -209,15 +163,14 @@ const MenteesPage = () => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
-                {/* Department + Personal Info Status */}
                 <div className="flex items-center space-x-2">
                   <GraduationCap className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm flex items-center gap-2">
                     {mentee.department}
-                    {typeof mentee.has_personal_info !== 'undefined' && (
-                      mentee.has_personal_info ? (
+                    {typeof mentee.has_personal_info !== "undefined" &&
+                      (mentee.has_personal_info ? (
                         <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs">
                           Personal info added
                         </span>
@@ -225,12 +178,10 @@ const MenteesPage = () => {
                         <span className="inline-flex items-center rounded-full bg-yellow-100 text-yellow-700 px-2 py-0.5 text-xs">
                           No personal info
                         </span>
-                      )
-                    )}
+                      ))}
                   </span>
                 </div>
 
-                {/* Email */}
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground truncate">
@@ -238,7 +189,6 @@ const MenteesPage = () => {
                   </span>
                 </div>
 
-                {/* Phone */}
                 {mentee.phone && (
                   <div className="flex items-center space-x-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
@@ -248,9 +198,6 @@ const MenteesPage = () => {
                   </div>
                 )}
 
-                {/* Start date removed per requirements */}
-
-                {/* Bio */}
                 {mentee.bio && (
                   <div className="pt-2 border-t">
                     <p className="text-sm text-muted-foreground line-clamp-2">
@@ -259,11 +206,10 @@ const MenteesPage = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="flex space-x-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={() => handleViewProfile(mentee.id)}
                   >
@@ -279,9 +225,6 @@ const MenteesPage = () => {
         </div>
       )}
 
-      {/* Summary Stats removed per requirements */}
-
-      {/* Profile Dialog */}
       <MenteeProfileDialog
         isOpen={isProfileDialogOpen}
         onClose={handleCloseProfile}

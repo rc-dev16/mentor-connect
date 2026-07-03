@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Upload, FileText, Link as LinkIcon, X } from "lucide-react";
-import apiService from "@/services/api";
+import { useResources } from "@/data/hooks/useResources";
+import { useResourceMutations } from "@/data/hooks/mutations/useResourceMutations";
+import { resourcesApi } from "@/data/api/resources.api";
 
 interface Resource {
   id: string;
@@ -24,49 +26,37 @@ interface Resource {
 
 const MentorResourcesPage = () => {
   const { toast } = useToast();
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: resources = [], isLoading } = useResources();
+  const createResource = useResourceMutations();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", url: "", description: "" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadType, setUploadType] = useState<'file' | 'link'>('file');
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadType, setUploadType] = useState<"file" | "link">("file");
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
-  const load = async () => {
-    try {
-      setIsLoading(true);
-      const data = await apiService.getResources();
-      setResources(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error('Error loading resources:', e);
-      setResources([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
+  const typedResources = resources as Resource[];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       if (!allowedTypes.includes(file.type)) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: "Only PDF and Word documents (.pdf, .doc, .docx) are allowed"
+          description: "Only PDF and Word documents (.pdf, .doc, .docx) are allowed",
         });
         return;
       }
-      // Validate file size (10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast({
           variant: "destructive",
           title: "File too large",
-          description: "File size must be less than 10MB"
+          description: "File size must be less than 10MB",
         });
         return;
       }
@@ -75,50 +65,45 @@ const MentorResourcesPage = () => {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   const handleViewFile = async (resource: Resource) => {
     if (!resource.file_url) return;
-    
+
     try {
       setDownloadingFileId(resource.id);
-      const blob = await apiService.downloadResourceFile(resource.file_url);
-      
-      // Create a blob URL
+      const blob = await resourcesApi.downloadResourceFile(resource.file_url);
+
       const url = window.URL.createObjectURL(blob);
-      
-      // For PDFs, open in new tab
-      if (resource.mime_type === 'application/pdf') {
-        const newWindow = window.open(url, '_blank');
+
+      if (resource.mime_type === "application/pdf") {
+        const newWindow = window.open(url, "_blank");
         if (!newWindow) {
-          // If popup blocked, fall back to download
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = url;
           link.download = `${resource.title}.pdf`;
           link.click();
         }
       } else {
-        // For Word docs, download directly
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        const ext = resource.file_url.split('.').pop() || 'doc';
+        const ext = resource.file_url.split(".").pop() || "doc";
         link.download = `${resource.title}.${ext}`;
         link.click();
       }
-      
-      // Clean up the blob URL after a delay
+
       setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-    } catch (error: any) {
-      console.error('Error viewing file:', error);
+    } catch (error: unknown) {
+      console.error("Error viewing file:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to view file"
+        description: error instanceof Error ? error.message : "Failed to view file",
       });
     } finally {
       setDownloadingFileId(null);
@@ -132,40 +117,39 @@ const MentorResourcesPage = () => {
         return;
       }
 
-      if (uploadType === 'file' && !selectedFile) {
+      if (uploadType === "file" && !selectedFile) {
         toast({ variant: "destructive", title: "Missing file", description: "Please select a file to upload" });
         return;
       }
 
-      if (uploadType === 'link' && !form.url) {
+      if (uploadType === "link" && !form.url) {
         toast({ variant: "destructive", title: "Missing URL", description: "Please provide a URL" });
         return;
       }
 
-      setIsUploading(true);
-      await apiService.createResource({
+      await createResource.mutateAsync({
         title: form.title,
         description: form.description,
-        url: uploadType === 'link' ? form.url : undefined,
-        file: uploadType === 'file' ? selectedFile : undefined,
-        is_public: false // Resources are always private to the mentor's mentees only
+        url: uploadType === "link" ? form.url : undefined,
+        file: uploadType === "file" ? selectedFile ?? undefined : undefined,
+        is_public: false,
       });
 
-      toast({ title: "Resource added", description: uploadType === 'file' ? "File uploaded successfully" : "Link added successfully" });
+      toast({
+        title: "Resource added",
+        description: uploadType === "file" ? "File uploaded successfully" : "Link added successfully",
+      });
       setOpen(false);
       setForm({ title: "", url: "", description: "" });
       setSelectedFile(null);
-      setUploadType('file');
-      await load();
-    } catch (e: any) {
-      console.error('Error creating resource:', e);
+      setUploadType("file");
+    } catch (e: unknown) {
+      console.error("Error creating resource:", e);
       toast({
         variant: "destructive",
         title: "Error",
-        description: e.message || "Failed to add resource"
+        description: e instanceof Error ? e.message : "Failed to add resource",
       });
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -174,14 +158,17 @@ const MentorResourcesPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Resources</h1>
 
-        <Dialog open={open} onOpenChange={(o) => {
-          setOpen(o);
-          if (!o) {
-            setForm({ title: "", url: "", description: "" });
-            setSelectedFile(null);
-            setUploadType('file');
-          }
-        }}>
+        <Dialog
+          open={open}
+          onOpenChange={(o) => {
+            setOpen(o);
+            if (!o) {
+              setForm({ title: "", url: "", description: "" });
+              setSelectedFile(null);
+              setUploadType("file");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button>Add Resource</Button>
           </DialogTrigger>
@@ -190,7 +177,7 @@ const MentorResourcesPage = () => {
               <DialogTitle>Add New Resource</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Tabs value={uploadType} onValueChange={(v) => setUploadType(v as 'file' | 'link')}>
+              <Tabs value={uploadType} onValueChange={(v) => setUploadType(v as "file" | "link")}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="file">
                     <Upload className="h-4 w-4 mr-2" />
@@ -228,11 +215,7 @@ const MentorResourcesPage = () => {
                           <span className="text-sm">{selectedFile.name}</span>
                           <span className="text-xs text-muted-foreground">({formatFileSize(selectedFile.size)})</span>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedFile(null)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
@@ -286,8 +269,8 @@ const MentorResourcesPage = () => {
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={onCreate} disabled={isUploading}>
-                  {isUploading ? "Uploading..." : "Save"}
+                <Button onClick={onCreate} disabled={createResource.isPending}>
+                  {createResource.isPending ? "Uploading..." : "Save"}
                 </Button>
               </div>
             </div>
@@ -300,27 +283,27 @@ const MentorResourcesPage = () => {
           <div className="h-32 flex items-center justify-center text-sm text-muted-foreground">Loading resources...</div>
         ) : (
           <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Link/File</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Link/File</TableHead>
+                <TableHead>Added</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
-              {resources.length === 0 ? (
+              {typedResources.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">No resources yet</TableCell>
                 </TableRow>
               ) : (
-                resources.map((r) => (
+                typedResources.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="max-w-[260px] truncate">{r.title}</TableCell>
                     <TableCell>
-                      {r.resource_type === 'file' ? (
+                      {r.resource_type === "file" ? (
                         <span className="inline-flex items-center gap-1 text-sm">
                           <FileText className="h-4 w-4" />
                           File
@@ -334,7 +317,7 @@ const MentorResourcesPage = () => {
                     </TableCell>
                     <TableCell className="max-w-[360px] truncate text-muted-foreground">{r.description || "-"}</TableCell>
                     <TableCell>
-                      {r.resource_type === 'file' ? (
+                      {r.resource_type === "file" ? (
                         <Button
                           variant="link"
                           className="p-0"
@@ -354,9 +337,7 @@ const MentorResourcesPage = () => {
                       )}
                     </TableCell>
                     <TableCell>{new Date(r.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      {/* Future: delete/edit */}
-                    </TableCell>
+                    <TableCell className="text-right" />
                   </TableRow>
                 ))
               )}
@@ -364,11 +345,8 @@ const MentorResourcesPage = () => {
           </Table>
         )}
       </Card>
-
     </div>
   );
 };
 
 export default MentorResourcesPage;
-
-

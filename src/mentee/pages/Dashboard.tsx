@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Clock, Bell, Mail, Phone, Building2, AlertCircle, CheckCircle, FileText, Calendar, XCircle, Info, BookOpen } from "lucide-react";
+import { Clock, Bell, Mail, Phone, Building2, AlertCircle, CheckCircle, FileText, Calendar, XCircle, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,16 +8,63 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import apiService from "@/services/api";
+import { useDashboardSummary } from "@/data/hooks/useDashboardSummary";
+import type { ActivityItem } from "@/data/types/meetings.types";
 
-const getNotificationIcon = (notification: any) => {
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  return date.toLocaleDateString();
+};
+
+const mapActivityToNotification = (item: ActivityItem) => {
+  const status = (item.status || "").toLowerCase();
+  const type =
+    item.type === "session_request" && status && status !== "pending"
+      ? "session_status"
+      : item.type || "notification";
+
+  const timestamp = item.ts || item.created_at || item.time || "";
+  const displayTime = timestamp && !Number.isNaN(Date.parse(timestamp))
+    ? formatTimeAgo(timestamp)
+    : item.time || "";
+
+  let scheduledDate: string | undefined;
+  let scheduledTime: string | undefined;
+  if (type === "session_status" && status === "approved" && item.time) {
+    const parts = item.time.split(" ");
+    scheduledDate = parts[0];
+    scheduledTime = parts[1];
+  }
+
+  return {
+    id: item.id,
+    type,
+    status,
+    title: item.title,
+    message: item.message,
+    time: displayTime,
+    created_at: timestamp,
+    is_read: item.is_read ?? false,
+    scheduledDate,
+    scheduledTime,
+  };
+};
+
+const getNotificationIcon = (notification: ReturnType<typeof mapActivityToNotification>) => {
   switch (notification.type) {
     case "session_request":
-      return notification.status === "pending" ? 
+      return notification.status === "pending" ?
         <AlertCircle className="h-5 w-5 text-yellow-500" /> :
         <CheckCircle className="h-5 w-5 text-green-500" />;
     case "session_status":
-      return notification.status === "accepted" ?
+      return notification.status === "accepted" || notification.status === "approved" ?
         <CheckCircle className="h-5 w-5 text-green-500" /> :
         notification.status === "rescheduled" ?
         <Calendar className="h-5 w-5 text-blue-500" /> :
@@ -37,163 +83,34 @@ const getNotificationIcon = (notification: any) => {
 };
 
 const MenteeDashboard = () => {
-  const [studentInfo, setStudentInfo] = useState<any>({ name: "", email: "" });
-  const [assignedMentor, setAssignedMentor] = useState<any>({ 
-    name: "", 
-    email: "", 
-    phone: "", 
-    cabin: "", 
-    availability: "" 
-  });
-  const [loadingHeader, setLoadingHeader] = useState(true);
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [profile, mentor] = await Promise.all([
-          apiService.getUserProfile(),
-          apiService.getMyMentor().catch(() => null),
-        ]);
-        setStudentInfo(profile || {});
-        if (mentor) {
-          setAssignedMentor({
-            name: mentor.name || "",
-            email: mentor.email || "",
-            phone: mentor.phone || "",
-            cabin: mentor.cabin || "",
-            availability: mentor.availability || ""
-          });
-        }
-      } catch (e) {
-        // fallback to blanks
-      } finally {
-        setLoadingHeader(false);
+  const { data: summary, isLoading: loadingHeader } = useDashboardSummary();
+
+  const studentInfo = summary?.profile || { name: "", email: "" };
+  const assignedMentor = summary?.mentor
+    ? {
+        name: summary.mentor.name || "",
+        email: summary.mentor.email || "",
+        phone: summary.mentor.phone || "",
+        cabin: summary.mentor.cabin || "",
+        availability: summary.mentor.availability || "",
       }
-    };
-    load();
-  }, []);
+    : { name: "", email: "", phone: "", cabin: "", availability: "" };
 
-  const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
-  useEffect(() => {
-    const loadMeetings = async () => {
-      try {
-        const data = await apiService.getMenteeMeetings('scheduled');
-        const mapped = Array.isArray(data) ? data.slice(0, 5).map((m: any) => ({
-          id: m.id,
-          topic: m.topic || m.title || 'Meeting',
-          date: (m.meeting_date || '').slice(0, 10),
-          time: (m.meeting_time || '').slice(0, 5),
-          teamsLink: m.teams_link,
-        })) : [];
-        setUpcomingMeetings(mapped);
-      } catch (e) {
-        setUpcomingMeetings([]);
-      }
-    };
-    loadMeetings();
-  }, []);
+  const upcomingMeetings = (summary?.upcomingMeetings || []).slice(0, 5).map((m) => ({
+    id: m.id,
+    topic: m.topic || m.title || "Meeting",
+    date: (m.meeting_date || "").slice(0, 10),
+    time: (m.meeting_time || "").slice(0, 5),
+    teamsLink: m.teams_link,
+  }));
 
-  const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
-  useEffect(() => {
-    const load = async () => {
-      try {
-        // Fetch notifications from the notifications API
-        const notifications = await apiService.getNotifications().catch(() => []);
-        
-        const formatTimeAgo = (dateString: string) => {
-          const date = new Date(dateString);
-          const now = new Date();
-          const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-          if (diffInSeconds < 60) return 'Just now';
-          if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
-          if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-          if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-          return date.toLocaleDateString();
-        };
-
-        // Also fetch session requests for backward compatibility
-        const requests = await apiService.getSessionRequests().catch(() => []);
-        const toDateOnly = (v: any) => {
-          if (!v) return '';
-          const s = typeof v === 'string' ? v : new Date(v).toISOString();
-          return s.slice(0, 10); // YYYY-MM-DD
-        };
-        const formatDMY = (yyyyMmDd: string) => {
-          if (!yyyyMmDd) return '';
-          const [y, m, d] = yyyyMmDd.split('-');
-          return `${d}-${m}-${y}`;
-        };
-        const formatHM = (hhmm?: string) => (hhmm ? hhmm.slice(0, 5) : '');
-
-        // Map notifications from API
-        const notificationItems = Array.isArray(notifications) ? notifications.map((n: any) => {
-            return {
-              id: n.id,
-              type: n.type,
-              title: n.title,
-              message: n.message,
-              time: formatTimeAgo(n.created_at),
-              created_at: n.created_at,
-              is_read: n.is_read,
-              related_entity_type: n.related_entity_type,
-              related_entity_id: n.related_entity_id
-            };
-          }) : [];
-
-        // Map session requests (for backward compatibility)
-        const requestItems = Array.isArray(requests) ? requests.map((r: any) => {
-            const status = (r.status || '').toLowerCase();
-            const type = status === 'pending' ? 'session_request' : 'session_status';
-            const dateOnly = toDateOnly(r.preferred_date);
-            const message = status === 'pending'
-              ? `Your mentorship session request for '${r.title}' is pending approval`
-              : status === 'approved'
-                ? `Your session request accepted by mentor`
-                : `Your mentorship session request '${r.title}' was rejected`;
-            const time = formatTimeAgo(r.updated_at || r.created_at);
-            return { 
-              id: `request-${r.id}`, 
-              type, 
-              status, 
-              title: 'Session Request',
-              message, 
-              time, 
-              created_at: r.updated_at || r.created_at,
-              updated_at: r.updated_at,
-              scheduledDate: formatDMY(dateOnly), 
-              scheduledTime: formatHM(r.preferred_time),
-              is_read: false
-            };
-          }) : [];
-
-        // Combine notifications and session requests
-        const allItems = [...notificationItems, ...requestItems]
-          .sort((a: any, b: any) => {
-            // Sort unread first, then by date (most recent first)
-            if (a.is_read !== b.is_read) {
-              return a.is_read ? 1 : -1;
-            }
-            // Sort by date
-            const dateA = new Date(a.created_at || a.updated_at || 0).getTime();
-            const dateB = new Date(b.created_at || b.updated_at || 0).getTime();
-            return dateB - dateA;
-          })
-          .slice(0, 10);
-
-        setRecentNotifications(allItems);
-      } catch (e) {
-        console.error('Error loading notifications:', e);
-        setRecentNotifications([]);
-      }
-    };
-    load();
-  }, []);
+  const recentNotifications = (summary?.recentActivity || []).map(mapActivityToNotification);
 
   return (
     <div className="h-full flex flex-col gap-6">
       <div>
         <h1 className="text-4xl font-bold text-foreground">Mentee Dashboard</h1>
-        <p className="text-lg text-muted-foreground mt-2">Welcome back, {loadingHeader ? '...' : (studentInfo.name || 'Student')}!</p>
+        <p className="text-lg text-muted-foreground mt-2">Welcome back, {loadingHeader ? "..." : (studentInfo.name || "Student")}!</p>
       </div>
 
       {/* Assigned Mentor Info */}
@@ -202,11 +119,11 @@ const MenteeDashboard = () => {
           <CardTitle className="text-xl">Your Mentor</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">{assignedMentor.name || '—'}</h3>
+          <h3 className="text-lg font-semibold">{assignedMentor.name || "—"}</h3>
           <div className="grid gap-3">
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-primary" />
-              <span className="text-base">{assignedMentor.email || '—'}</span>
+              <span className="text-base">{assignedMentor.email || "—"}</span>
             </div>
             {assignedMentor.phone && (
               <div className="flex items-center gap-3">
@@ -254,10 +171,10 @@ const MenteeDashboard = () => {
                     <div className="space-y-2">
                       <p className="text-base font-medium text-foreground">{meeting.topic}</p>
                       <p className="text-sm text-muted-foreground">
-                        {meeting.date.split('-').reverse().join('-')} at {meeting.time}
+                        {meeting.date.split("-").reverse().join("-")} at {meeting.time}
                       </p>
                     </div>
-                    <Button size="default" variant="outline" className="px-6" disabled={!meeting.teamsLink} onClick={() => meeting.teamsLink && window.open(meeting.teamsLink, '_blank')}>
+                    <Button size="default" variant="outline" className="px-6" disabled={!meeting.teamsLink} onClick={() => meeting.teamsLink && window.open(meeting.teamsLink, "_blank")}>
                       Join
                     </Button>
                   </div>
@@ -283,7 +200,7 @@ const MenteeDashboard = () => {
                   <div
                     key={notification.id}
                     className={`flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors ${
-                      !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                      !notification.is_read ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
                     }`}
                   >
                     {getNotificationIcon(notification)}
@@ -303,12 +220,6 @@ const MenteeDashboard = () => {
                         </div>
                       )}
                       <p className="text-sm font-medium text-foreground break-words">{notification.message}</p>
-                      {notification.type === "session_status" && notification.status === "rescheduled" && (
-                        <div className="text-sm space-y-1">
-                          <p className="text-red-500 line-through">{notification.oldTime}</p>
-                          <p className="text-green-600">Rescheduled to: {notification.newTime}</p>
-                        </div>
-                      )}
                       {notification.type === "resource_added" && (
                         <Button 
                           variant="link" 
@@ -322,7 +233,7 @@ const MenteeDashboard = () => {
                         <Button 
                           variant="link" 
                           className="h-auto p-0 text-primary"
-                          onClick={() => window.location.href = notification.link || "/mentorship-connect"}
+                          onClick={() => window.location.href = "/mentorship-connect"}
                         >
                           View Notes
                         </Button>
@@ -367,7 +278,7 @@ const MenteeDashboard = () => {
                       <div
                         key={notification.id}
                         className={`flex items-start gap-3 pb-4 border-b border-border last:border-0 ${
-                          !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg' : ''
+                          !notification.is_read ? "bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg" : ""
                         }`}
                       >
                         {getNotificationIcon(notification)}
@@ -376,16 +287,10 @@ const MenteeDashboard = () => {
                             <p className="text-sm font-semibold text-foreground">{notification.title}</p>
                           )}
                           <p className="text-base text-foreground">{notification.message}</p>
-                          {notification.type === "session_status" && notification.status === "accepted" && (
+                          {notification.type === "session_status" && (notification.status === "accepted" || notification.status === "approved") && (
                             <p className="text-sm text-green-600 font-medium">
                               Scheduled for {notification.scheduledTime} on {notification.scheduledDate}
                             </p>
-                          )}
-                          {notification.type === "session_status" && notification.status === "rescheduled" && (
-                            <div className="text-sm space-y-1">
-                              <p className="text-red-500 line-through">{notification.oldTime}</p>
-                              <p className="text-green-600">Rescheduled to: {notification.newTime}</p>
-                            </div>
                           )}
                           {notification.type === "resource_added" && (
                             <Button 
@@ -400,7 +305,7 @@ const MenteeDashboard = () => {
                             <Button 
                               variant="link" 
                               className="h-auto p-0 text-primary"
-                              onClick={() => window.location.href = notification.link || "/mentorship-connect"}
+                              onClick={() => window.location.href = "/mentorship-connect"}
                             >
                               View Notes
                             </Button>

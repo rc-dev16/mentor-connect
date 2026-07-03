@@ -157,6 +157,41 @@ CREATE TABLE notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Personal information for mentees
+CREATE TABLE personal_information (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    section VARCHAR(10),
+    roll_no VARCHAR(20),
+    branch VARCHAR(100),
+    blood_group VARCHAR(10),
+    hostel_block VARCHAR(20),
+    room_no VARCHAR(20),
+    date_of_birth DATE,
+    has_muj_alumni BOOLEAN DEFAULT false,
+    alumni_details TEXT,
+    father_name VARCHAR(255),
+    father_mobile VARCHAR(20),
+    father_email VARCHAR(255),
+    father_occupation VARCHAR(100),
+    father_organization VARCHAR(255),
+    father_designation VARCHAR(255),
+    mother_name VARCHAR(255),
+    mother_mobile VARCHAR(20),
+    mother_email VARCHAR(255),
+    mother_occupation VARCHAR(100),
+    mother_organization VARCHAR(255),
+    mother_designation VARCHAR(255),
+    communication_address TEXT,
+    communication_pincode VARCHAR(10),
+    permanent_address TEXT,
+    permanent_pincode VARCHAR(10),
+    business_card_url VARCHAR(500),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_users_email ON users(email);
 CREATE UNIQUE INDEX idx_users_clerk_user_id ON users(clerk_user_id) WHERE clerk_user_id IS NOT NULL;
@@ -174,6 +209,7 @@ CREATE INDEX idx_session_requests_mentee_id ON session_requests(mentee_id);
 CREATE INDEX idx_session_requests_status ON session_requests(status);
 CREATE INDEX idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX idx_personal_info_user_id ON personal_information(user_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -191,3 +227,4 @@ CREATE TRIGGER update_meeting_groups_updated_at BEFORE UPDATE ON meeting_groups 
 CREATE TRIGGER update_meetings_updated_at BEFORE UPDATE ON meetings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_session_requests_updated_at BEFORE UPDATE ON session_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_resources_updated_at BEFORE UPDATE ON resources FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_personal_information_updated_at BEFORE UPDATE ON personal_information FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import MentorTopbar from "@/mentor/components/MentorTopbar";
 import MentorSidebar from "@/mentor/components/MentorSidebar";
+import { AppDataProvider } from "@/data/providers/AppDataProvider";
 
 interface MentorLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ const MentorLayout = ({ children }: MentorLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
+    <AppDataProvider>
     <div className="min-h-screen bg-background">
       <MentorTopbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
       <MentorSidebar 
@@ -30,6 +32,7 @@ const MentorLayout = ({ children }: MentorLayoutProps) => {
         </div>
       </main>
     </div>
+    </AppDataProvider>
   );
 };
 

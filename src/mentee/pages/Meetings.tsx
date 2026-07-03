@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Calendar, Clock, Video, FileText, CheckCircle, XCircle, List, ArrowRight } from "lucide-react";
+import { Video, FileText, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,82 +18,45 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import apiService from "@/services/api";
+import { useMenteeMeetings } from "@/data/hooks/useMeetings";
+
+const mapMeeting = (m: {
+  id: string;
+  meeting_date?: string;
+  meeting_time?: string;
+  topic?: string;
+  title?: string;
+  teams_link?: string;
+  comments?: string;
+  action_points?: string;
+  duration_minutes?: number;
+}, status: string) => ({
+  id: m.id,
+  date: (m.meeting_date || "").slice(0, 10),
+  time: (m.meeting_time || "").slice(0, 5),
+  topic: m.topic || m.title || "Meeting",
+  status,
+  teamsLink: m.teams_link,
+  notes: m.comments || "",
+  actionPoints: m.action_points || "",
+  feedback: m.comments || "",
+  actionItems: m.action_points ? [m.action_points] : [],
+  duration: m.duration_minutes ? `${m.duration_minutes} minutes` : "60 minutes",
+});
 
 const MenteeMeetings = () => {
-  const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await (apiService as any).getMenteeMeetings('scheduled');
-        const mapped = Array.isArray(data) ? data.map((m: any) => ({
-          id: m.id,
-          date: (m.meeting_date || '').slice(0, 10),
-          time: (m.meeting_time || '').slice(0, 5),
-          topic: m.topic || m.title || 'Meeting',
-          status: 'Scheduled',
-          teamsLink: m.teams_link,
-        })) : [];
-        setUpcomingMeetings(mapped);
-      } catch (e) {
-        setUpcomingMeetings([]);
-      }
-    };
-    load();
-  }, []);
+  const { data: scheduledData } = useMenteeMeetings("scheduled");
+  const { data: completedData } = useMenteeMeetings("completed");
 
-  const [attendedMeetings, setAttendedMeetings] = useState<any[]>([]);
-  const [missedMeetings, setMissedMeetings] = useState<any[]>([]);
+  const upcomingMeetings = Array.isArray(scheduledData)
+    ? scheduledData.map((m) => mapMeeting(m, "Scheduled"))
+    : [];
 
-  useEffect(() => {
-    const loadAttendedMeetings = async () => {
-      try {
-        const data = await (apiService as any).getMenteeMeetings('completed');
-        const mapped = Array.isArray(data) ? data.map((m: any) => ({
-          id: m.id,
-          date: (m.meeting_date || '').slice(0, 10),
-          time: (m.meeting_time || '').slice(0, 5),
-          topic: m.topic || m.title || 'Meeting',
-          status: 'Attended',
-          notes: m.comments || '',
-          actionPoints: m.action_points || '',
-          feedback: m.comments || '',
-          actionItems: m.action_points ? [m.action_points] : [],
-          duration: m.duration_minutes ? `${m.duration_minutes} minutes` : '60 minutes'
-        })) : [];
-        setAttendedMeetings(mapped);
-      } catch (e) {
-        setAttendedMeetings([]);
-      }
-    };
-    loadAttendedMeetings();
-  }, []);
+  const attendedMeetings = Array.isArray(completedData)
+    ? completedData.map((m) => mapMeeting(m, "Attended"))
+    : [];
 
-  // Missed meetings this semester - for now empty, could be implemented later
-  // const missedMeetings: any[] = [];
-
-  const form = useForm({
-    defaultValues: {
-      topic: "",
-      preferredTime: "",
-      comments: ""
-    }
-  });
-
-  const onSubmit = (data: any) => {
-    // TODO: Send meeting request to mentor
-  };
+  const missedMeetings: ReturnType<typeof mapMeeting>[] = [];
 
   return (
     <div className="space-y-6">
@@ -274,7 +236,7 @@ const MenteeMeetings = () => {
                           <div className="space-y-4 mt-4">
                             <div>
                               <h4 className="font-medium mb-2">Meeting Notes:</h4>
-                              <p className="text-sm text-muted-foreground">{meeting.notes || 'No notes available'}</p>
+                              <p className="text-sm text-muted-foreground">{meeting.notes || "No notes available"}</p>
                             </div>
                             {meeting.actionPoints && (
                               <div>

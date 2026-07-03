@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/data/query-client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import MentorLayout from "./mentor/components/MentorLayout";
@@ -22,13 +22,10 @@ import { LoginRoute } from "@/auth/routes/LoginRoute";
 import { ProtectedRoute } from "@/auth/routes/ProtectedRoute";
 import { SetupPasswordRoute } from "@/auth/routes/SetupPasswordRoute";
 
-const queryClient = new QueryClient();
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
       <BrowserRouter>
         <Routes>
           {/* Redirect root to /login so Clerk can use a stable path */}

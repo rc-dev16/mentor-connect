@@ -22,10 +22,61 @@ VITE_API_BASE_URL=http://localhost:5001/api
 Backend:
 
 ```bash
+CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
 DATABASE_URL=...
 CORS_ORIGIN=http://localhost:8080,http://127.0.0.1:8080
+CLERK_AUTHORIZED_PARTIES=http://localhost:8080,http://127.0.0.1:8080
 ```
+
+`CLERK_PUBLISHABLE_KEY` is required on the backend for `@clerk/express`. Without it, hosted auth routes fail.
+
+## Production Deployment (Railway + Clerk)
+
+Use the same Clerk application keys on both frontend and backend services.
+
+Frontend Railway service:
+
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_...
+VITE_API_BASE_URL=https://<your-backend-service>.up.railway.app/api
+```
+
+Backend Railway service:
+
+```bash
+CLERK_PUBLISHABLE_KEY=pk_...
+CLERK_SECRET_KEY=sk_...
+DATABASE_URL=postgresql://...
+CORS_ORIGIN=https://<your-frontend-service>.up.railway.app
+CLERK_AUTHORIZED_PARTIES=https://<your-frontend-service>.up.railway.app
+FRONTEND_URL=https://<your-frontend-service>.up.railway.app
+NODE_ENV=production
+```
+
+In the Clerk Dashboard:
+
+1. Open your Clerk application.
+2. Add your hosted frontend domain under allowed origins/domains.
+3. If using a production Clerk instance, use the production `pk_` / `sk_` keys on Railway.
+4. Redeploy frontend and backend after changing env vars.
+
+Verify backend health after deploy:
+
+```bash
+curl https://<your-backend-service>.up.railway.app/api/health
+```
+
+Expected:
+
+```json
+{
+  "status": "OK",
+  "clerkConfigured": true
+}
+```
+
+If `clerkConfigured` is `false`, set the missing Clerk env vars on the backend Railway service and redeploy.
 
 ## Local Startup
 
@@ -42,22 +93,22 @@ Frontend:
 npm run dev
 ```
 
-## Database Migration
+## Database Setup
 
-Run this once for existing databases:
+Fresh database:
 
 ```bash
-cd backend
-npm run migrate:clerk-auth
+psql "$DATABASE_URL" -f database/schema.sql
 ```
 
-This adds:
+[`database/schema.sql`](database/schema.sql) includes Clerk auth columns and mentor profile fields.
 
-- `users.clerk_user_id`
-- `users.password_setup_completed`
-- `users.last_login_at`
+For local development, seed test users and sync Clerk IDs:
 
-## Test Users
+```bash
+node database/create-2-test-users.cjs
+node database/sync-clerk-test-users.cjs
+```
 
 The test seed maps:
 

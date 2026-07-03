@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FileText, Link2, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import apiService from "@/services/api";
+import { useResources } from "@/data/hooks/useResources";
+import { resourcesApi } from "@/data/api/resources.api";
 
 interface Resource {
   id: string;
@@ -20,37 +21,21 @@ interface Resource {
 
 const Resources = () => {
   const { toast } = useToast();
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: resourcesData, isLoading } = useResources();
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
-  const loadResources = async () => {
-    try {
-      setIsLoading(true);
-      const data = await apiService.getResources();
-      setResources(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error('Error loading resources:', e);
-      setResources([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadResources();
-  }, []);
+  const resources: Resource[] = Array.isArray(resourcesData) ? resourcesData : [];
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
   };
 
   const getResourceIcon = (resource: Resource) => {
-    if (resource.resource_type === 'file') {
+    if (resource.resource_type === "file") {
       return <FileText className="h-5 w-5 text-red-500" />;
     }
     return <Link2 className="h-5 w-5 text-blue-500" />;
@@ -61,38 +46,33 @@ const Resources = () => {
     
     try {
       setDownloadingFileId(resource.id);
-      const blob = await apiService.downloadResourceFile(resource.file_url);
+      const blob = await resourcesApi.downloadResourceFile(resource.file_url);
       
-      // Create a blob URL
       const url = window.URL.createObjectURL(blob);
       
-      // For PDFs, open in new tab
-      if (resource.mime_type === 'application/pdf') {
-        const newWindow = window.open(url, '_blank');
+      if (resource.mime_type === "application/pdf") {
+        const newWindow = window.open(url, "_blank");
         if (!newWindow) {
-          // If popup blocked, fall back to download
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = url;
           link.download = `${resource.title}.pdf`;
           link.click();
         }
       } else {
-        // For Word docs, download directly
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        const ext = resource.file_url.split('.').pop() || 'doc';
+        const ext = resource.file_url.split(".").pop() || "doc";
         link.download = `${resource.title}.${ext}`;
         link.click();
       }
       
-      // Clean up the blob URL after a delay
       setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-    } catch (error: any) {
-      console.error('Error viewing file:', error);
+    } catch (error: unknown) {
+      console.error("Error viewing file:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to view file"
+        description: error instanceof Error ? error.message : "Failed to view file"
       });
     } finally {
       setDownloadingFileId(null);
@@ -142,7 +122,7 @@ const Resources = () => {
                         <p className="text-sm text-muted-foreground">{resource.description}</p>
                       )}
                     </div>
-                    {resource.resource_type === 'file' ? (
+                    {resource.resource_type === "file" ? (
                       <Button
                         variant="outline"
                         size="sm"

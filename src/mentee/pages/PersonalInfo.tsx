@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,72 +5,57 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import apiService from "@/services/api";
+import { useProfile } from "@/data/hooks/useProfile";
+import { usePersonalInfo } from "@/data/hooks/usePersonalInfo";
+import { usePersonalInfoMutations } from "@/data/hooks/mutations/usePersonalInfoMutations";
 
 const PersonalInfo = () => {
   const { toast } = useToast();
-  const [profile, setProfile] = useState<any>({ name: "", registration_number: "" });
-  const [personalInfo, setPersonalInfo] = useState<any>({});
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { data: profile = { name: "", registration_number: "" } } = useProfile();
+  const { data: personalInfoRaw, isLoading: loading } = usePersonalInfo();
+  const savePersonalInfo = usePersonalInfoMutations();
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [userProfile, personalData] = await Promise.all([
-          apiService.getUserProfile(),
-          apiService.getPersonalInfo().catch(() => ({ message: 'No personal information found' }))
-        ]);
-        setProfile(userProfile || {});
-        setPersonalInfo(personalData.data || personalData || {});
-      } catch (e) {
-        setProfile({});
-        setPersonalInfo({});
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const personalInfo = (personalInfoRaw as { data?: Record<string, unknown> })?.data
+    || (personalInfoRaw as Record<string, unknown>)
+    || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
       const data = {
-        section: formData.get('section') as string || undefined,
-        roll_no: formData.get('roll_no') as string || undefined,
-        branch: formData.get('branch') as string || undefined,
-        blood_group: formData.get('blood_group') as string || undefined,
-        hostel_block: formData.get('hostel_block') as string || undefined,
-        room_no: formData.get('room_no') as string || undefined,
-        date_of_birth: formData.get('date_of_birth') as string || undefined,
-        has_muj_alumni: formData.get('has_muj_alumni') === 'true',
-        alumni_details: formData.get('alumni_details') as string || undefined,
-        father_name: formData.get('father_name') as string || undefined,
-        father_mobile: formData.get('father_mobile') as string || undefined,
-        father_email: formData.get('father_email') as string || undefined,
-        father_occupation: formData.get('father_occupation') as string || undefined,
-        father_organization: formData.get('father_organization') as string || undefined,
-        father_designation: formData.get('father_designation') as string || undefined,
-        mother_name: formData.get('mother_name') as string || undefined,
-        mother_mobile: formData.get('mother_mobile') as string || undefined,
-        mother_email: formData.get('mother_email') as string || undefined,
-        mother_occupation: formData.get('mother_occupation') as string || undefined,
-        mother_organization: formData.get('mother_organization') as string || undefined,
-        mother_designation: formData.get('mother_designation') as string || undefined,
-        communication_address: formData.get('communication_address') as string || undefined,
-        communication_pincode: formData.get('communication_pincode') as string || undefined,
-        permanent_address: formData.get('permanent_address') as string || undefined,
-        permanent_pincode: formData.get('permanent_pincode') as string || undefined,
-        business_card_url: formData.get('business_card_url') as string || undefined,
-        phone: formData.get('phone') as string || undefined,
-        email: formData.get('email') as string || undefined
+        section: formData.get("section") as string || undefined,
+        roll_no: formData.get("roll_no") as string || undefined,
+        branch: formData.get("branch") as string || undefined,
+        blood_group: formData.get("blood_group") as string || undefined,
+        hostel_block: formData.get("hostel_block") as string || undefined,
+        room_no: formData.get("room_no") as string || undefined,
+        date_of_birth: formData.get("date_of_birth") as string || undefined,
+        has_muj_alumni: formData.get("has_muj_alumni") === "true",
+        alumni_details: formData.get("alumni_details") as string || undefined,
+        father_name: formData.get("father_name") as string || undefined,
+        father_mobile: formData.get("father_mobile") as string || undefined,
+        father_email: formData.get("father_email") as string || undefined,
+        father_occupation: formData.get("father_occupation") as string || undefined,
+        father_organization: formData.get("father_organization") as string || undefined,
+        father_designation: formData.get("father_designation") as string || undefined,
+        mother_name: formData.get("mother_name") as string || undefined,
+        mother_mobile: formData.get("mother_mobile") as string || undefined,
+        mother_email: formData.get("mother_email") as string || undefined,
+        mother_occupation: formData.get("mother_occupation") as string || undefined,
+        mother_organization: formData.get("mother_organization") as string || undefined,
+        mother_designation: formData.get("mother_designation") as string || undefined,
+        communication_address: formData.get("communication_address") as string || undefined,
+        communication_pincode: formData.get("communication_pincode") as string || undefined,
+        permanent_address: formData.get("permanent_address") as string || undefined,
+        permanent_pincode: formData.get("permanent_pincode") as string || undefined,
+        business_card_url: formData.get("business_card_url") as string || undefined,
+        phone: formData.get("phone") as string || undefined,
+        email: formData.get("email") as string || undefined
       };
 
-      await apiService.savePersonalInfo(data);
+      await savePersonalInfo.mutateAsync(data);
       
       toast({
         title: "Success",
@@ -83,10 +67,20 @@ const PersonalInfo = () => {
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save personal information",
       });
-    } finally {
-      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-4xl font-bold text-foreground">Personal Information</h1>
+          <p className="text-muted-foreground mt-2">Manage your personal and family details</p>
+        </div>
+        <div className="text-center py-8 text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -116,18 +110,18 @@ const PersonalInfo = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="section">Section</Label>
-                <Input id="section" name="section" placeholder="Enter section" defaultValue={personalInfo.section || ""} />
+                <Input id="section" name="section" placeholder="Enter section" defaultValue={String(personalInfo.section || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="roll_no">Roll No.</Label>
-                <Input id="roll_no" name="roll_no" placeholder="Enter roll number" defaultValue={personalInfo.roll_no || ""} />
+                <Input id="roll_no" name="roll_no" placeholder="Enter roll number" defaultValue={String(personalInfo.roll_no || "")} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="branch">Branch</Label>
-                <Input id="branch" name="branch" placeholder="Enter your branch" defaultValue={personalInfo.branch || ""} />
+                <Input id="branch" name="branch" placeholder="Enter your branch" defaultValue={String(personalInfo.branch || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mobile">Mobile No.</Label>
@@ -142,24 +136,24 @@ const PersonalInfo = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="blood_group">Blood Group</Label>
-                <Input id="blood_group" name="blood_group" placeholder="Enter blood group" defaultValue={personalInfo.blood_group || ""} />
+                <Input id="blood_group" name="blood_group" placeholder="Enter blood group" defaultValue={String(personalInfo.blood_group || "")} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="hostel_block">Hostel Block No.</Label>
-                <Input id="hostel_block" name="hostel_block" placeholder="Enter hostel block number" defaultValue={personalInfo.hostel_block || ""} />
+                <Input id="hostel_block" name="hostel_block" placeholder="Enter hostel block number" defaultValue={String(personalInfo.hostel_block || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="room_no">Room No.</Label>
-                <Input id="room_no" name="room_no" placeholder="Enter room number" defaultValue={personalInfo.room_no || ""} />
+                <Input id="room_no" name="room_no" placeholder="Enter room number" defaultValue={String(personalInfo.room_no || "")} />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="date_of_birth">Date of Birth</Label>
-              <Input id="date_of_birth" name="date_of_birth" type="date" defaultValue={personalInfo.date_of_birth || ""} />
+              <Input id="date_of_birth" name="date_of_birth" type="date" defaultValue={String(personalInfo.date_of_birth || "")} />
             </div>
           </CardContent>
         </Card>
@@ -202,28 +196,28 @@ const PersonalInfo = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fatherName">Father's Name</Label>
-                  <Input id="fatherName" name="father_name" placeholder="Enter father's name" defaultValue={personalInfo.father_name || ""} />
+                  <Input id="fatherName" name="father_name" placeholder="Enter father's name" defaultValue={String(personalInfo.father_name || "")} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fatherMobile">Mobile No.</Label>
-                  <Input id="fatherMobile" name="father_mobile" placeholder="Enter mobile number" type="tel" defaultValue={personalInfo.father_mobile || ""} />
+                  <Input id="fatherMobile" name="father_mobile" placeholder="Enter mobile number" type="tel" defaultValue={String(personalInfo.father_mobile || "")} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fatherEmail">E-mail Id</Label>
-                <Input id="fatherEmail" name="father_email" placeholder="Enter email address" type="email" defaultValue={personalInfo.father_email || ""} />
+                <Input id="fatherEmail" name="father_email" placeholder="Enter email address" type="email" defaultValue={String(personalInfo.father_email || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="father_occupation">Occupation</Label>
-                <Input id="father_occupation" name="father_occupation" placeholder="Enter father's occupation" defaultValue={personalInfo.father_occupation || ""} />
+                <Input id="father_occupation" name="father_occupation" placeholder="Enter father's occupation" defaultValue={String(personalInfo.father_occupation || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fatherOrg">Organization</Label>
-                <Input id="fatherOrg" name="father_organization" placeholder="Enter organization name" defaultValue={personalInfo.father_organization || ""} />
+                <Input id="fatherOrg" name="father_organization" placeholder="Enter organization name" defaultValue={String(personalInfo.father_organization || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="father_designation">Designation</Label>
-                <Input id="father_designation" name="father_designation" placeholder="Enter designation" defaultValue={personalInfo.father_designation || ""} />
+                <Input id="father_designation" name="father_designation" placeholder="Enter designation" defaultValue={String(personalInfo.father_designation || "")} />
               </div>
             </div>
 
@@ -233,28 +227,28 @@ const PersonalInfo = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="motherName">Mother's Name</Label>
-                  <Input id="motherName" name="mother_name" placeholder="Enter mother's name" defaultValue={personalInfo.mother_name || ""} />
+                  <Input id="motherName" name="mother_name" placeholder="Enter mother's name" defaultValue={String(personalInfo.mother_name || "")} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="motherMobile">Mobile No.</Label>
-                  <Input id="motherMobile" name="mother_mobile" placeholder="Enter mobile number" type="tel" defaultValue={personalInfo.mother_mobile || ""} />
+                  <Input id="motherMobile" name="mother_mobile" placeholder="Enter mobile number" type="tel" defaultValue={String(personalInfo.mother_mobile || "")} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="motherEmail">E-mail Id</Label>
-                <Input id="motherEmail" name="mother_email" placeholder="Enter email address" type="email" defaultValue={personalInfo.mother_email || ""} />
+                <Input id="motherEmail" name="mother_email" placeholder="Enter email address" type="email" defaultValue={String(personalInfo.mother_email || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mother_occupation">Occupation</Label>
-                <Input id="mother_occupation" name="mother_occupation" placeholder="Enter mother's occupation" defaultValue={personalInfo.mother_occupation || ""} />
+                <Input id="mother_occupation" name="mother_occupation" placeholder="Enter mother's occupation" defaultValue={String(personalInfo.mother_occupation || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="motherOrg">Organization</Label>
-                <Input id="motherOrg" name="mother_organization" placeholder="Enter organization name" defaultValue={personalInfo.mother_organization || ""} />
+                <Input id="motherOrg" name="mother_organization" placeholder="Enter organization name" defaultValue={String(personalInfo.mother_organization || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mother_designation">Designation</Label>
-                <Input id="mother_designation" name="mother_designation" placeholder="Enter designation" defaultValue={personalInfo.mother_designation || ""} />
+                <Input id="mother_designation" name="mother_designation" placeholder="Enter designation" defaultValue={String(personalInfo.mother_designation || "")} />
               </div>
             </div>
           </CardContent>
@@ -271,11 +265,11 @@ const PersonalInfo = () => {
               <h3 className="font-semibold">Address for Communication</h3>
               <div className="space-y-2">
                 <Label htmlFor="commAddress">Address</Label>
-                <Textarea id="commAddress" name="communication_address" placeholder="Enter communication address" defaultValue={personalInfo.communication_address || ""} />
+                <Textarea id="commAddress" name="communication_address" placeholder="Enter communication address" defaultValue={String(personalInfo.communication_address || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="commPincode">Pin Code</Label>
-                <Input id="commPincode" name="communication_pincode" placeholder="Enter pin code" defaultValue={personalInfo.communication_pincode || ""} />
+                <Input id="commPincode" name="communication_pincode" placeholder="Enter pin code" defaultValue={String(personalInfo.communication_pincode || "")} />
               </div>
             </div>
 
@@ -284,11 +278,11 @@ const PersonalInfo = () => {
               <h3 className="font-semibold">Permanent Address</h3>
               <div className="space-y-2">
                 <Label htmlFor="permAddress">Address</Label>
-                <Textarea id="permAddress" name="permanent_address" placeholder="Enter permanent address" defaultValue={personalInfo.permanent_address || ""} />
+                <Textarea id="permAddress" name="permanent_address" placeholder="Enter permanent address" defaultValue={String(personalInfo.permanent_address || "")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="permPincode">Pin Code</Label>
-                <Input id="permPincode" name="permanent_pincode" placeholder="Enter pin code" defaultValue={personalInfo.permanent_pincode || ""} />
+                <Input id="permPincode" name="permanent_pincode" placeholder="Enter pin code" defaultValue={String(personalInfo.permanent_pincode || "")} />
               </div>
             </div>
           </CardContent>
@@ -307,7 +301,7 @@ const PersonalInfo = () => {
                 name="business_card_url" 
                 type="url" 
                 placeholder="Enter business card URL (optional)" 
-                defaultValue={personalInfo.business_card_url || ""} 
+                defaultValue={String(personalInfo.business_card_url || "")} 
               />
               <p className="text-sm text-muted-foreground">
                 Upload your parent's business card to a file sharing service and paste the URL here.
@@ -318,8 +312,8 @@ const PersonalInfo = () => {
 
         {/* Submit Button */}
         <div className="flex justify-end">
-          <Button type="submit" size="lg" disabled={saving}>
-            {saving ? "Saving..." : "Save Information"}
+          <Button type="submit" size="lg" disabled={savePersonalInfo.isPending}>
+            {savePersonalInfo.isPending ? "Saving..." : "Save Information"}
           </Button>
         </div>
       </form>

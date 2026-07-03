@@ -9,20 +9,13 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { apiService } from "@/services/api";
+import { useProfile } from "@/data/hooks/useProfile";
+import { useUpdateProfile } from "@/data/hooks/mutations/useUpdateProfile";
 
 const Settings = () => {
   const { toast } = useToast();
-  const [profile, setProfile] = useState<{ 
-    name: string; 
-    email: string; 
-    phone?: string; 
-    cabin?: string; 
-    availability?: string;
-    user_type?: string;
-  } | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { data: profile, isLoading: loadingProfile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const [formData, setFormData] = useState({
     phone: "",
     cabin: "",
@@ -30,41 +23,28 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await apiService.getUserProfile();
-        setProfile(data);
-        setFormData({
-          phone: data.phone || "",
-          cabin: data.cabin || "",
-          availability: data.availability || "",
-        });
-      } catch (e) {
-        setProfile({ name: "", email: "" });
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-    load();
-  }, []);
+    if (profile) {
+      setFormData({
+        phone: profile.phone || "",
+        cabin: profile.cabin || "",
+        availability: profile.availability || "",
+      });
+    }
+  }, [profile]);
 
   const handleSave = async () => {
     try {
-      setSaving(true);
-      const updated = await apiService.updateUserProfile(formData);
-      setProfile(updated);
+      await updateProfile.mutateAsync(formData);
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to update profile",
+        description: error instanceof Error ? error.message : "Failed to update profile",
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -76,7 +56,6 @@ const Settings = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Profile Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -99,16 +78,16 @@ const Settings = () => {
                   <Input id="email" type="email" value={profile?.email || ""} readOnly />
                 </div>
                 <Separator />
-                {profile?.user_type === 'mentor' && (
+                {profile?.user_type === "mentor" && (
                   <>
                     <div className="space-y-1.5">
                       <Label htmlFor="phone" className="flex items-center gap-2">
                         <Phone className="h-4 w-4" />
                         Phone Number
                       </Label>
-                      <Input 
-                        id="phone" 
-                        value={formData.phone} 
+                      <Input
+                        id="phone"
+                        value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder="Enter your phone number"
                       />
@@ -118,9 +97,9 @@ const Settings = () => {
                         <Building2 className="h-4 w-4" />
                         Cabin
                       </Label>
-                      <Input 
-                        id="cabin" 
-                        value={formData.cabin} 
+                      <Input
+                        id="cabin"
+                        value={formData.cabin}
                         onChange={(e) => setFormData({ ...formData, cabin: e.target.value })}
                         placeholder="Enter your cabin number/location"
                       />
@@ -130,30 +109,30 @@ const Settings = () => {
                         <Clock className="h-4 w-4" />
                         Availability
                       </Label>
-                      <Textarea 
-                        id="availability" 
-                        value={formData.availability} 
+                      <Textarea
+                        id="availability"
+                        value={formData.availability}
                         onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
                         placeholder="Enter your availability (e.g., Mon-Fri 9am-5pm)"
                         rows={3}
                       />
                     </div>
-                    <Button onClick={handleSave} disabled={saving}>
-                      {saving ? "Saving..." : "Save Changes"}
+                    <Button onClick={handleSave} disabled={updateProfile.isPending}>
+                      {updateProfile.isPending ? "Saving..." : "Save Changes"}
                     </Button>
                   </>
                 )}
-                {profile?.user_type !== 'mentor' && (
+                {profile?.user_type !== "mentor" && (
                   <div className="space-y-1.5">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input 
-                      id="phone" 
-                      value={formData.phone} 
+                    <Input
+                      id="phone"
+                      value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="Enter your phone number"
                     />
-                    <Button onClick={handleSave} disabled={saving} className="mt-2">
-                      {saving ? "Saving..." : "Save Changes"}
+                    <Button onClick={handleSave} disabled={updateProfile.isPending} className="mt-2">
+                      {updateProfile.isPending ? "Saving..." : "Save Changes"}
                     </Button>
                   </div>
                 )}
@@ -162,7 +141,6 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Notification Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -190,7 +168,6 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Security Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

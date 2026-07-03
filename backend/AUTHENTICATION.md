@@ -4,7 +4,7 @@
 
 The backend trusts Clerk for identity and PostgreSQL for app authorization.
 
-Every protected route uses `backend/src/middleware/authenticate.js`.
+Every protected route uses `backend/src/auth/auth.middleware.js`.
 
 The middleware:
 
@@ -61,16 +61,28 @@ Compatibility endpoint that verifies the Clerk session and returns the active da
 ## Required Environment
 
 ```bash
+CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
 DATABASE_URL=...
+CORS_ORIGIN=https://<frontend-host>
+CLERK_AUTHORIZED_PARTIES=https://<frontend-host>
 ```
 
-## Migration
+For Railway, `CLERK_PUBLISHABLE_KEY` must be set on the backend service. Missing publishable key causes auth routes to fail in production.
 
-Run:
+## Database Setup
+
+Fresh database:
 
 ```bash
-npm run migrate:clerk-auth
+psql "$DATABASE_URL" -f database/schema.sql
 ```
 
-This adds the Clerk mapping and login metadata columns to `users`.
+[`database/schema.sql`](../database/schema.sql) includes Clerk auth columns (`clerk_user_id`, `password_setup_completed`, `last_login_at`) and mentor profile fields (`cabin`, `availability`).
+
+Local test users and Clerk sync:
+
+```bash
+node database/create-2-test-users.cjs
+node database/sync-clerk-test-users.cjs
+```

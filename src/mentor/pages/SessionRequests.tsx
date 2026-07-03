@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,15 +14,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import apiService from "@/services/api";
+import { useSessionRequests } from "@/data/hooks/useSessionRequests";
+import { useSessionRequestMutations } from "@/data/hooks/mutations/useSessionRequestMutations";
 
 type RequestStatus = "pending" | "approved" | "rejected";
 
 interface SessionRequest {
   id: string;
   topic: string;
-  preferred_time: string; // ISO or HH:MM
-  preferred_date: string; // YYYY-MM-DD
+  preferred_time: string;
+  preferred_date: string;
   comments?: string;
   mentee_id: string;
   mentee_name: string;
@@ -39,53 +40,38 @@ const formatDMY = (iso: string) => {
 
 const SessionRequestsPage = () => {
   const { toast } = useToast();
-  const [requests, setRequests] = useState<SessionRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: requests = [], isLoading } = useSessionRequests();
+  const { updateStatus } = useSessionRequestMutations();
   const [activeTab, setActiveTab] = useState<RequestStatus>("approved");
   const [viewing, setViewing] = useState<SessionRequest | null>(null);
   const [teamsLink, setTeamsLink] = useState("");
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        const data = await apiService.getSessionRequests().catch(() => []);
-        setRequests(Array.isArray(data) ? data : []);
-      } catch (e) {
-        setRequests([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const typedRequests = requests as SessionRequest[];
 
   const filtered = useMemo(
-    () => requests.filter((r) => r.status === activeTab),
-    [requests, activeTab]
+    () => typedRequests.filter((r) => r.status === activeTab),
+    [typedRequests, activeTab]
   );
-
-  const updateStatusLocally = (id: string, status: RequestStatus) => {
-    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-  };
 
   const handleApprove = async (req: SessionRequest) => {
     try {
-      await apiService.updateSessionRequestStatus(req.id, "approved", teamsLink || undefined);
-      updateStatusLocally(req.id, "approved");
+      await updateStatus.mutateAsync({
+        id: req.id,
+        status: "approved",
+        mentor_notes: teamsLink || undefined,
+      });
       toast({ title: "Approved", description: "Session request approved" });
       setTeamsLink("");
-    } catch (e) {
+    } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to approve" });
     }
   };
 
   const handleReject = async (req: SessionRequest) => {
     try {
-      await apiService.updateSessionRequestStatus(req.id, "rejected");
-      updateStatusLocally(req.id, "rejected");
+      await updateStatus.mutateAsync({ id: req.id, status: "rejected" });
       toast({ title: "Rejected", description: "Session request rejected" });
-    } catch (e) {
+    } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to reject" });
     }
   };
@@ -216,5 +202,3 @@ const SessionRequestsPage = () => {
 };
 
 export default SessionRequestsPage;
-
-

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle, FileText, Bell, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import apiService from "@/services/api";
+import { useNotifications } from "@/data/hooks/useNotifications";
+import { useNotificationMutations } from "@/data/hooks/mutations/useNotificationMutations";
 
 interface Notification {
   id: string;
@@ -20,52 +20,28 @@ interface Notification {
 const Notifications = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: notificationsData, isLoading } = useNotifications();
+  const { markAsRead, markAllAsRead } = useNotificationMutations();
 
-  const loadNotifications = async () => {
-    try {
-      setIsLoading(true);
-      const data = await apiService.getNotifications();
-      setNotifications(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-      setNotifications([]);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load notifications"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadNotifications();
-  }, []);
+  const notifications: Notification[] = Array.isArray(notificationsData) ? notificationsData : [];
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await apiService.markNotificationAsRead(notificationId);
-      setNotifications(notifications.map(n => 
-        n.id === notificationId ? { ...n, is_read: true } : n
-      ));
+      await markAsRead.mutateAsync(notificationId);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      await apiService.markAllNotificationsAsRead();
-      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+      await markAllAsRead.mutateAsync();
       toast({
         title: "Success",
         description: "All notifications marked as read"
       });
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.error("Error marking all as read:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -79,7 +55,7 @@ const Notifications = () => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 60) return "Just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
@@ -108,19 +84,18 @@ const Notifications = () => {
       handleMarkAsRead(notification.id);
     }
 
-    // Navigate based on notification type
-    if (notification.type === 'resource_added') {
-      navigate('/resources');
-    } else if (notification.type === 'meeting_notes') {
-      navigate('/mentorship-connect');
-    } else if (notification.type === 'info_update') {
-      navigate('/personal-info');
-    } else if (notification.type === 'session_status') {
-      navigate('/mentorship-connect');
+    if (notification.type === "resource_added") {
+      navigate("/resources");
+    } else if (notification.type === "meeting_notes") {
+      navigate("/mentorship-connect");
+    } else if (notification.type === "info_update") {
+      navigate("/personal-info");
+    } else if (notification.type === "session_status") {
+      navigate("/mentorship-connect");
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <div className="space-y-6">
@@ -133,7 +108,7 @@ const Notifications = () => {
           <Button 
             variant="outline" 
             onClick={handleMarkAllAsRead}
-            disabled={isLoading}
+            disabled={isLoading || markAllAsRead.isPending}
           >
             Mark all as read
           </Button>
@@ -166,7 +141,7 @@ const Notifications = () => {
                 <div
                   key={notification.id}
                   className={`flex items-start gap-3 pb-4 border-b border-border last:border-0 cursor-pointer hover:bg-accent/50 p-3 rounded-lg transition-colors ${
-                    !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                    !notification.is_read ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
@@ -187,7 +162,7 @@ const Notifications = () => {
                         className="h-auto p-0 text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/resources');
+                          navigate("/resources");
                         }}
                       >
                         View Resources
@@ -199,7 +174,7 @@ const Notifications = () => {
                         className="h-auto p-0 text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/mentorship-connect');
+                          navigate("/mentorship-connect");
                         }}
                       >
                         View Notes
@@ -211,7 +186,7 @@ const Notifications = () => {
                         className="h-auto p-0 text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/personal-info');
+                          navigate("/personal-info");
                         }}
                       >
                         Update Now

@@ -56,6 +56,7 @@ Seed test users:
 
 ```bash
 node database/create-2-test-users.cjs
+node database/sync-clerk-test-users.cjs
 ```
 
 ## Scenarios

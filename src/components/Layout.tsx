@@ -2,6 +2,7 @@ import { useState } from "react";
 import Topbar from "./Topbar";
 import Sidebar from "./Sidebar";
 import { cn } from "@/lib/utils";
+import { AppDataProvider } from "@/data/providers/AppDataProvider";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
+    <AppDataProvider>
     <div className="min-h-screen bg-background">
       <Topbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
       <Sidebar 
@@ -30,6 +32,7 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </main>
     </div>
+    </AppDataProvider>
   );
 };
 

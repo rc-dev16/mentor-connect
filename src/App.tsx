@@ -20,7 +20,6 @@ import MentorReports from "./mentor/pages/Reports";
 import MentorMentees from "./mentor/pages/Mentees";
 import { LoginRoute } from "@/auth/routes/LoginRoute";
 import { ProtectedRoute } from "@/auth/routes/ProtectedRoute";
-import { SetupPasswordRoute } from "@/auth/routes/SetupPasswordRoute";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,8 +30,7 @@ const App = () => (
           {/* Redirect root to /login so Clerk can use a stable path */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login/*" element={<LoginRoute />} />
-          <Route path="/setup-password" element={<SetupPasswordRoute />} />
-          
+
           {/* Protected Mentee Routes */}
           <Route
             path="/dashboard"

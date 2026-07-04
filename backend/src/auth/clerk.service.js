@@ -15,6 +15,12 @@ function getPrimaryEmail(clerkUser) {
   return primary?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || null;
 }
 
+function clerkUserHasPassword(clerkUser) {
+  if (clerkUser?.passwordEnabled === false) return false;
+  if (clerkUser?.password_enabled === false) return false;
+  return true;
+}
+
 async function updateClerkPassword(clerkUserId, password) {
   return clerkClient.users.updateUser(clerkUserId, { password });
 }
@@ -23,5 +29,6 @@ module.exports = {
   getClerkAuthUserId,
   getClerkUser,
   getPrimaryEmail,
+  clerkUserHasPassword,
   updateClerkPassword,
 };

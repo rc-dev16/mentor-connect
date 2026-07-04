@@ -16,10 +16,11 @@ The mentor is linked to the mentee by one active mentorship relationship.
 3. Choose `Email code`.
 4. Enter one of the provisioned test emails.
 5. Verify the Clerk OTP from that inbox.
-6. Set a password when prompted.
-7. Confirm the redirect:
+6. Confirm the redirect:
    - Mentor -> `/mentor/dashboard`
    - Mentee -> `/dashboard`
+7. A pinned banner below the topbar prompts you to set a password in **Settings**.
+8. Open Settings, use the Security card to set your password.
 
 ## Later Login
 
@@ -61,6 +62,9 @@ node database/sync-clerk-test-users.cjs
 
 ## Scenarios
 
+- First login shows password setup banner until password is set in Settings.
+- Settings Security card supports first-time setup and password change.
+- Mentor and mentee share the same topbar layout.
 - Mentor can view the linked mentee.
 - Mentee routes redirect away from mentor-only pages.
 - Mentor routes redirect away from mentee-only pages.

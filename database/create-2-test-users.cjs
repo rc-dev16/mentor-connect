@@ -43,7 +43,7 @@ async function createTestUsers() {
         `UPDATE users 
          SET name = $1, user_type = 'mentor', registration_number = $2, 
              department = $3, is_active = true,
-             password_setup_completed = COALESCE(password_setup_completed, false)
+             password_setup_completed = false
          WHERE id = $4`,
         [mentorName, 'FAC_TEST_001', 'Computer Science', mentorId]
       );
@@ -79,7 +79,7 @@ async function createTestUsers() {
         `UPDATE users 
          SET name = $1, user_type = 'mentee', registration_number = $2, 
              department = $3, is_active = true,
-             password_setup_completed = COALESCE(password_setup_completed, false)
+             password_setup_completed = false
          WHERE id = $4`,
         [menteeName, '23FE10CII99999', 'Computer Science', menteeId]
       );

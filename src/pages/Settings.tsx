@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import { useAuth } from "@clerk/react";
 import { User, Bell, Lock, Phone, Building2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,11 +9,15 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { PasswordForm } from "@/auth/components/PasswordForm";
+import { useAuthSession } from "@/auth/hooks/useAuthSession";
 import { useProfile } from "@/data/hooks/useProfile";
 import { useUpdateProfile } from "@/data/hooks/mutations/useUpdateProfile";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { userId } = useAuth();
+  const { session } = useAuthSession(!!userId, userId || undefined);
   const { data: profile, isLoading: loadingProfile } = useProfile();
   const updateProfile = useUpdateProfile();
   const [formData, setFormData] = useState({
@@ -178,11 +182,11 @@ const Settings = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Sign in with email code or the password you set after your first login.
+              {session?.requiresPasswordSetup
+                ? "Create a password so you can sign in with email and password next time."
+                : "Update your password below. You will need your current password."}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Passwords are managed securely by Clerk; Mentor-Connect only stores your app role and profile.
-            </p>
+            <PasswordForm mode={session?.requiresPasswordSetup ? "setup" : "change"} />
           </CardContent>
         </Card>
       </div>

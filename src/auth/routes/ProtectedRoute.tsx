@@ -43,10 +43,6 @@ export function ProtectedRoute({ children, allowedRole }: ProtectedRouteProps) {
     );
   }
 
-  if (session.requiresPasswordSetup) {
-    return <Navigate to="/setup-password" replace />;
-  }
-
   if (session.role !== allowedRole) {
     return allowedRole === "mentor"
       ? <Navigate to="/dashboard" replace />

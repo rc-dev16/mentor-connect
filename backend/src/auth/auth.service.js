@@ -4,6 +4,7 @@ const {
   getClerkAuthUserId,
   getClerkUser,
   getPrimaryEmail,
+  clerkUserHasPassword,
   updateClerkPassword,
 } = require('./clerk.service');
 
@@ -91,7 +92,8 @@ async function resolveProvisionedUser(req, { touchLastLogin = false } = {}) {
     session: {
       user: toSessionUser(dbUser, clerkUserId),
       role: dbUser.user_type,
-      requiresPasswordSetup: !dbUser.password_setup_completed,
+      requiresPasswordSetup:
+        !dbUser.password_setup_completed || !clerkUserHasPassword(clerkUser),
     },
   };
 }

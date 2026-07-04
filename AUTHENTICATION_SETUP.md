@@ -129,10 +129,9 @@ These emails must be able to receive Clerk OTP codes.
 2. Choose `Email code`.
 3. Enter a provisioned email.
 4. Verify the OTP from Clerk.
-5. If first login, set a password.
-6. The backend checks the database role and redirects:
-   - mentor -> `/mentor/dashboard`
-   - mentee -> `/dashboard`
+5. You are redirected to your role dashboard immediately.
+6. If first login, a banner below the topbar directs you to set a password in **Settings** (Security card).
+7. After password setup, you can sign in with email code or password on future visits.
 
 ## Blocked Cases
 

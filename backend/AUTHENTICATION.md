@@ -38,7 +38,9 @@ Response:
 
 ### `POST /api/auth/password-setup-complete`
 
-Marks the database user as having completed first-login password setup after Clerk accepts the new password.
+Called from Settings on first-time password setup. Updates the Clerk user password and marks `password_setup_completed` in the database.
+
+Password changes after setup use the Clerk client (`user.updatePassword`) from the frontend; no backend endpoint is required for that flow.
 
 ### `GET /api/auth/verify`
 

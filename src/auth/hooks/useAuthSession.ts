@@ -35,7 +35,9 @@ export function useAuthSession(enabled: boolean, userId?: string) {
       return authSession;
     },
     enabled: enabled && !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: false,
   });
 

@@ -38,10 +38,6 @@ export function LoginRoute() {
     );
   }
 
-  if (session.requiresPasswordSetup) {
-    return <Navigate to="/setup-password" replace />;
-  }
-
   const targetPath = session.role === "mentor" ? "/mentor/dashboard" : "/dashboard";
   return <Navigate to={targetPath} replace />;
 }

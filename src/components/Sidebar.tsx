@@ -1,4 +1,4 @@
-import { Home, Calendar, Settings, X, PanelLeftClose, PanelLeftOpen, Users, UserCircle, BookOpen } from "lucide-react";
+import { Home, Calendar, Settings, X, PanelLeftClose, PanelLeftOpen, Users, UserCircle, BookOpen, Bell } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ const menuItems = [
   { icon: Users, label: "Mentorship Connect", path: "/mentorship-connect" },
   { icon: UserCircle, label: "Personal Info", path: "/personal-info" },
   { icon: BookOpen, label: "Resources", path: "/resources" },
+  { icon: Bell, label: "Notifications", path: "/notifications" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

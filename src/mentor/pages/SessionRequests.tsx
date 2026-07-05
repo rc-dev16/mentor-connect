@@ -13,7 +13,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useSessionRequests } from "@/data/hooks/useSessionRequests";
 import { useSessionRequestMutations } from "@/data/hooks/mutations/useSessionRequestMutations";
 

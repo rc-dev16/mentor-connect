@@ -17,19 +17,6 @@ export function useProfile() {
   });
 }
 
-export function useMyMentor() {
-  const { userId } = useAuth();
-  const summary = useDashboardSummary();
-
-  return useQuery({
-    queryKey: queryKeys.users.mentor(userId || undefined),
-    queryFn: () => usersApi.getMyMentor(),
-    enabled: !!userId,
-    placeholderData: summary.data?.mentor ?? undefined,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
 export function useMentees() {
   const { userId } = useAuth();
 

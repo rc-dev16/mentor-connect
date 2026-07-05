@@ -13,14 +13,3 @@ export function useNotifications() {
     staleTime: 60 * 1000,
   });
 }
-
-export function useUnreadNotificationsCount() {
-  const { userId } = useAuth();
-
-  return useQuery({
-    queryKey: queryKeys.notifications.unreadCount(userId || undefined),
-    queryFn: () => notificationsApi.getUnreadCount(),
-    enabled: !!userId,
-    staleTime: 30 * 1000,
-  });
-}

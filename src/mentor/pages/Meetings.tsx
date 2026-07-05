@@ -24,7 +24,7 @@ import {
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useMeetings, useMenteesList } from "@/data/hooks/useMeetings"
 import { useMeetingMutations } from "@/data/hooks/mutations/useMeetingMutations"
 import { meetingsApi } from "@/data/api/meetings.api"

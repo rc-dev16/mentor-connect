@@ -1,7 +1,7 @@
 import { AlertCircle, CheckCircle, FileText, Bell, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/data/hooks/useNotifications";
 import { useNotificationMutations } from "@/data/hooks/mutations/useNotificationMutations";

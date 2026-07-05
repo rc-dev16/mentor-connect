@@ -10,6 +10,7 @@ import MenteeMeetings from "./mentee/pages/Meetings";
 import MentorshipConnect from "./mentee/pages/MentorshipConnect";
 import PersonalInfo from "./mentee/pages/PersonalInfo";
 import Resources from "./mentee/pages/Resources";
+import Notifications from "./mentee/pages/Notifications";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import MentorDashboard from "./mentor/pages/Dashboard";
@@ -78,6 +79,16 @@ const App = () => (
               <ProtectedRoute allowedRole="mentee">
                 <Layout>
                   <Resources />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute allowedRole="mentee">
+                <Layout>
+                  <Notifications />
                 </Layout>
               </ProtectedRoute>
             }

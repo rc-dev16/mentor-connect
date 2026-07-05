@@ -3,21 +3,10 @@ import { FileText, Link2, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useResources } from "@/data/hooks/useResources";
 import { resourcesApi } from "@/data/api/resources.api";
-
-interface Resource {
-  id: string;
-  title: string;
-  url: string;
-  description?: string;
-  resource_type?: string;
-  file_url?: string;
-  mime_type?: string;
-  file_size?: number;
-  created_at: string;
-}
+import type { Resource } from "@/data/types/resources.types";
 
 const Resources = () => {
   const { toast } = useToast();

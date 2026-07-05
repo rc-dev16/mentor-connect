@@ -6,23 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, Link as LinkIcon, X } from "lucide-react";
 import { useResources } from "@/data/hooks/useResources";
 import { useResourceMutations } from "@/data/hooks/mutations/useResourceMutations";
 import { resourcesApi } from "@/data/api/resources.api";
-
-interface Resource {
-  id: string;
-  title: string;
-  url: string;
-  description?: string;
-  resource_type?: string;
-  file_url?: string;
-  mime_type?: string;
-  file_size?: number;
-  created_at: string;
-}
+import type { Resource } from "@/data/types/resources.types";
 
 const MentorResourcesPage = () => {
   const { toast } = useToast();

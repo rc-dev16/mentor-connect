@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { PasswordForm } from "@/auth/components/PasswordForm";
 import { useAuthSession } from "@/auth/hooks/useAuthSession";
 import { useProfile } from "@/data/hooks/useProfile";

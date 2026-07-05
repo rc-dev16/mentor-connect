@@ -25,14 +25,6 @@ export function useMenteeMeetings(status?: string) {
   });
 }
 
-export function useMeeting(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.meetings.detail(id || ""),
-    queryFn: () => meetingsApi.getMeeting(id!),
-    enabled: !!id,
-  });
-}
-
 export function useMenteesList() {
   const { userId } = useAuth();
 

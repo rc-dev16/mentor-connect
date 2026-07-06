@@ -1,29 +1,26 @@
-import { Home, Users, Calendar, FileText, Settings, X, PanelLeftClose, PanelLeftOpen, BookOpen, MessageSquare } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { NavItem } from "@/components/layout/nav.config";
 
-interface MentorSidebarProps {
+export type AppSidebarProps = {
+  items: NavItem[];
   isOpen: boolean;
   onClose: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-}
+};
 
-const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/mentor/dashboard" },
-  { icon: Users, label: "My Mentees", path: "/mentor/mentees" },
-  { icon: Calendar, label: "Meetings", path: "/mentor/meetings" },
-  { icon: MessageSquare, label: "Session Requests", path: "/mentor/session-requests" },
-  { icon: BookOpen, label: "Resources", path: "/mentor/resources" },
-  { icon: FileText, label: "Reports", path: "/mentor/reports" },
-  { icon: Settings, label: "Settings", path: "/mentor/settings" },
-];
-
-const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: MentorSidebarProps) => {
+export function AppSidebar({
+  items,
+  isOpen,
+  onClose,
+  isCollapsed,
+  onToggleCollapse,
+}: AppSidebarProps) {
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -31,7 +28,6 @@ const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: Mento
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed left-0 top-16 h-[calc(100vh-4rem)] bg-sidebar text-sidebar-foreground transition-all duration-300 z-40 shadow-lg",
@@ -40,7 +36,6 @@ const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: Mento
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Close button for mobile */}
         <div className="flex justify-end p-2 lg:hidden">
           <Button
             variant="ghost"
@@ -53,11 +48,11 @@ const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: Mento
         </div>
 
         <nav className="flex flex-col gap-1 p-4 pb-16">
-          {menuItems.map((item) => (
+          {items.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => onClose()}
+              onClick={onClose}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
@@ -74,7 +69,6 @@ const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: Mento
           ))}
         </nav>
 
-        {/* Collapse toggle button (desktop only) */}
         <div className="hidden lg:flex justify-center items-center absolute bottom-4 left-0 right-0 mx-auto">
           <Button
             variant="ghost"
@@ -92,6 +86,4 @@ const MentorSidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }: Mento
       </aside>
     </>
   );
-};
-
-export default MentorSidebar;
+}

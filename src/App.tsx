@@ -3,8 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/data/query-client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Layout from "./components/Layout";
-import MentorLayout from "./mentor/components/MentorLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import MenteeDashboard from "./mentee/pages/Dashboard";
 import MenteeMeetings from "./mentee/pages/Meetings";
 import MentorshipConnect from "./mentee/pages/MentorshipConnect";
@@ -37,9 +36,9 @@ const App = () => (
             path="/dashboard"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <MenteeDashboard />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -47,9 +46,9 @@ const App = () => (
             path="/meetings"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <MenteeMeetings />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -57,9 +56,9 @@ const App = () => (
             path="/mentorship-connect"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <MentorshipConnect />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -67,9 +66,9 @@ const App = () => (
             path="/personal-info"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <PersonalInfo />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -77,9 +76,9 @@ const App = () => (
             path="/resources"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <Resources />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -87,9 +86,9 @@ const App = () => (
             path="/notifications"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <Notifications />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -97,9 +96,9 @@ const App = () => (
             path="/settings"
             element={
               <ProtectedRoute allowedRole="mentee">
-                <Layout>
+                <AppLayout role="mentee">
                   <Settings />
-                </Layout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -109,9 +108,9 @@ const App = () => (
             path="/mentor/dashboard"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <MentorDashboard />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -124,9 +123,9 @@ const App = () => (
             path="/mentor/mentees"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <MentorMentees />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -134,9 +133,9 @@ const App = () => (
             path="/mentor/meetings"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <MentorMeetings />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -144,9 +143,9 @@ const App = () => (
             path="/mentor/session-requests"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <MentorSessionRequests />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -154,9 +153,9 @@ const App = () => (
             path="/mentor/resources"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <MentorResources />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -164,9 +163,9 @@ const App = () => (
             path="/mentor/reports"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <MentorReports />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -174,9 +173,9 @@ const App = () => (
             path="/mentor/settings"
             element={
               <ProtectedRoute allowedRole="mentor">
-                <MentorLayout>
+                <AppLayout role="mentor">
                   <Settings />
-                </MentorLayout>
+                </AppLayout>
               </ProtectedRoute>
             }
           />

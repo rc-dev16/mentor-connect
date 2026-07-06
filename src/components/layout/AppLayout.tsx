@@ -1,24 +1,38 @@
 import { useState } from "react";
-import MentorSidebar from "@/mentor/components/MentorSidebar";
 import { AppDataProvider } from "@/data/providers/AppDataProvider";
 import { AppShell } from "@/components/layout/AppShell";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { menteeNavItems, mentorNavItems } from "@/components/layout/nav.config";
+import type { AppSettingsPath } from "@/components/layout/AppTopbar";
 
-interface MentorLayoutProps {
+export type AppLayoutProps = {
+  role: "mentee" | "mentor";
   children: React.ReactNode;
-}
+};
 
-const MentorLayout = ({ children }: MentorLayoutProps) => {
+const settingsPathByRole: Record<AppLayoutProps["role"], AppSettingsPath> = {
+  mentee: "/settings",
+  mentor: "/mentor/settings",
+};
+
+const navItemsByRole = {
+  mentee: menteeNavItems,
+  mentor: mentorNavItems,
+} as const;
+
+export function AppLayout({ role, children }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <AppDataProvider>
       <AppShell
-        settingsPath="/mentor/settings"
+        settingsPath={settingsPathByRole[role]}
         isSidebarCollapsed={isSidebarCollapsed}
         onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
         sidebar={
-          <MentorSidebar
+          <AppSidebar
+            items={navItemsByRole[role]}
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
             isCollapsed={isSidebarCollapsed}
@@ -30,6 +44,4 @@ const MentorLayout = ({ children }: MentorLayoutProps) => {
       </AppShell>
     </AppDataProvider>
   );
-};
-
-export default MentorLayout;
+}

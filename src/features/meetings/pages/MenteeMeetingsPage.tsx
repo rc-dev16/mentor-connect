@@ -44,7 +44,7 @@ const mapMeeting = (m: {
   duration: m.duration_minutes ? `${m.duration_minutes} minutes` : "60 minutes",
 });
 
-const MenteeMeetings = () => {
+const MenteeMeetingsPage = () => {
   const { data: scheduledData } = useMenteeMeetings("scheduled");
   const { data: completedData } = useMenteeMeetings("completed");
 
@@ -259,4 +259,4 @@ const MenteeMeetings = () => {
   );
 };
 
-export default MenteeMeetings;
+export default MenteeMeetingsPage;

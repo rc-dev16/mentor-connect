@@ -72,7 +72,7 @@ const mapMeeting = (m: any): Meeting => ({
   duration_minutes: m.duration_minutes,
 })
 
-const MeetingsPage = () => {
+const MentorMeetingsPage = () => {
   const { toast } = useToast()
   const { data: meetingsData = [], isLoading: meetingsLoading, isError: meetingsError } = useMeetings()
   const { data: menteesList = [], isLoading: menteesLoading } = useMenteesList()
@@ -736,4 +736,4 @@ const MeetingsPage = () => {
   )
 }
 
-export default MeetingsPage
+export default MentorMeetingsPage

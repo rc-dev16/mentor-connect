@@ -17,7 +17,7 @@ interface Notification {
   created_at: string;
 }
 
-const Notifications = () => {
+const MenteeNotificationsPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { data: notificationsData, isLoading } = useNotifications();
@@ -38,14 +38,14 @@ const Notifications = () => {
       await markAllAsRead.mutateAsync();
       toast({
         title: "Success",
-        description: "All notifications marked as read"
+        description: "All notifications marked as read",
       });
     } catch (error) {
       console.error("Error marking all as read:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to mark all notifications as read"
+        description: "Failed to mark all notifications as read",
       });
     }
   };
@@ -105,8 +105,8 @@ const Notifications = () => {
           <p className="text-muted-foreground mt-2">View all your notifications and updates</p>
         </div>
         {unreadCount > 0 && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleMarkAllAsRead}
             disabled={isLoading || markAllAsRead.isPending}
           >
@@ -133,7 +133,7 @@ const Notifications = () => {
             <div className="text-center py-8 text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium">No notifications</p>
-              <p className="text-sm mt-2">You're all caught up!</p>
+              <p className="text-sm mt-2">You&apos;re all caught up!</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -157,8 +157,8 @@ const Notifications = () => {
                       )}
                     </div>
                     {notification.type === "resource_added" && (
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="h-auto p-0 text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -169,8 +169,8 @@ const Notifications = () => {
                       </Button>
                     )}
                     {notification.type === "meeting_notes" && (
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="h-auto p-0 text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -181,8 +181,8 @@ const Notifications = () => {
                       </Button>
                     )}
                     {notification.type === "info_update" && (
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="h-auto p-0 text-primary"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -204,4 +204,4 @@ const Notifications = () => {
   );
 };
 
-export default Notifications;
+export default MenteeNotificationsPage;

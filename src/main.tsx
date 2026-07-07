@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { ClerkProvider } from "@clerk/react";
 import { ClerkAuthBridge } from "@/auth/providers/ClerkAuthBridge";
-import App from "./App.tsx";
+import App from "@/app/App";
 import "./index.css";
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;

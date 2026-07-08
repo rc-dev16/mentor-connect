@@ -5,9 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useGenerateGroupReport } from "@/data/hooks/useMeetingReport";
 import { useMentees, useProfile } from "@/data/hooks/useProfile";
 import { useMeetings } from "@/data/hooks/useMeetings";
-import { meetingsApi } from "@/data/api/meetings.api";
 
 type ReportType = "group";
 type TimeRange = "this_month" | "semester" | "custom";
@@ -55,6 +55,7 @@ const ReportsPage = () => {
   const { data: menteesData = [] } = useMentees();
   const { data: meetingsData = [] } = useMeetings();
   const { data: profile } = useProfile();
+  const generateGroupReport = useGenerateGroupReport();
 
   const [reportType] = useState<ReportType>("group");
   const [timeRange, setTimeRange] = useState<TimeRange>("this_month");
@@ -108,40 +109,10 @@ const ReportsPage = () => {
         const selectedMeetings = meetings.filter(
           (m) => withinRange(m.meeting_date) && m.status === "completed"
         );
-        const details = await Promise.all(selectedMeetings.map((m) => meetingsApi.getMeeting(m.id)));
-
-        const menteeMap: Record<string, { name: string; reg: string; attended: number; total: number; personal: number }> = {};
-        mentees.forEach((mn) => {
-          menteeMap[mn.id] = {
-            name: mn.name,
-            reg: mn.registration_number,
-            attended: 0,
-            total: details.length,
-            personal: 0,
-          };
+        const table = await generateGroupReport.mutateAsync({
+          meetings: selectedMeetings,
+          mentees,
         });
-
-        details.forEach((d: { attendance?: { attended?: boolean; mentee_id: string }[] }) => {
-          const isPersonal = Array.isArray(d.attendance) && d.attendance.length === 1;
-          const presentIds = new Set(
-            (d.attendance || []).filter((a) => a.attended).map((a) => a.mentee_id)
-          );
-          presentIds.forEach((mid) => {
-            if (menteeMap[mid]) {
-              menteeMap[mid].attended += 1;
-              if (isPersonal) menteeMap[mid].personal += 1;
-            }
-          });
-        });
-
-        const table = Object.values(menteeMap).map((v) => ({
-          "Mentee Name": v.name,
-          "Reg. No.": v.reg,
-          "Gen. Meetings Attended": `${Math.max(v.attended - v.personal, 0)} / ${Math.max(v.total - v.personal, 0)}`,
-          "Personal Sessions": `${v.personal}`,
-          "Total Meetings": `${v.attended} / ${v.total}`,
-          "Attendance %": v.total ? `${Math.round((v.attended / v.total) * 100)}%` : "-",
-        }));
         setRows(table);
       }
     } catch {

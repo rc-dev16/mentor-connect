@@ -8,6 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useDownloadMenteePdf } from "@/data/hooks/useDownloads";
 import {
   User,
   Mail,
@@ -20,7 +21,6 @@ import {
   Download,
 } from "lucide-react";
 import { useMenteeProfile } from "@/data/hooks/usePersonalInfo";
-import { personalInfoApi } from "@/data/api/personal-info.api";
 
 interface MenteeProfileDialogProps {
   isOpen: boolean;
@@ -79,6 +79,7 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
     isFetching,
     refetch,
   } = useMenteeProfile(isOpen ? menteeId ?? undefined : undefined);
+  const downloadMenteePdf = useDownloadMenteePdf();
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
   const profile = profileData as MenteeProfile | undefined;
@@ -96,16 +97,10 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
 
     try {
       setIsDownloadingPDF(true);
-      const blob = await personalInfoApi.downloadMenteePersonalInfoPDF(menteeId);
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `mentee_personal_info_${profile?.registration_number || menteeId}_${new Date().toISOString().split("T")[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      await downloadMenteePdf.mutateAsync({
+        menteeId,
+        registrationNumber: profile?.registration_number,
+      });
 
       toast({
         title: "PDF Downloaded",

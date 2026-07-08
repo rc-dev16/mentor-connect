@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useDownloadMenteesCsv } from "@/data/hooks/useDownloads";
 import { Search, Mail, Phone, User, GraduationCap, Download } from "lucide-react";
 import { useMentees } from "@/data/hooks/useProfile";
-import { personalInfoApi } from "@/data/api/personal-info.api";
 import MenteeProfileDialog from "../components/MenteeProfileDialog";
 
 interface Mentee {
@@ -24,6 +24,7 @@ interface Mentee {
 const MenteesPage = () => {
   const { toast } = useToast();
   const { data: mentees = [], isLoading } = useMentees();
+  const downloadMenteesCsv = useDownloadMenteesCsv();
   const [searchTerm, setSearchTerm] = useState("");
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedMenteeId, setSelectedMenteeId] = useState<string | null>(null);
@@ -56,16 +57,7 @@ const MenteesPage = () => {
   const handleDownloadMenteesInfo = async () => {
     try {
       setIsDownloading(true);
-      const blob = await personalInfoApi.downloadMenteesPersonalInfo();
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `mentees_personal_info_${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      await downloadMenteesCsv.mutateAsync();
 
       toast({
         title: "Download Successful",

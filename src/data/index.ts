@@ -5,6 +5,13 @@ export { useNotifications } from "@/data/hooks/useNotifications";
 export { useSessionRequests } from "@/data/hooks/useSessionRequests";
 export { useResources } from "@/data/hooks/useResources";
 export { usePersonalInfo, useMenteeProfile } from "@/data/hooks/usePersonalInfo";
+export {
+  useDownloadMeetingExport,
+  useDownloadMenteePdf,
+  useDownloadMenteesCsv,
+  useDownloadResource,
+} from "@/data/hooks/useDownloads";
+export { useGenerateGroupReport } from "@/data/hooks/useMeetingReport";
 export { useUpdateProfile } from "@/data/hooks/mutations/useUpdateProfile";
 export { useMeetingMutations } from "@/data/hooks/mutations/useMeetingMutations";
 export { useSessionRequestMutations } from "@/data/hooks/mutations/useSessionRequestMutations";

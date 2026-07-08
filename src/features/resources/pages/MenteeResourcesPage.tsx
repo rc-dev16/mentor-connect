@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useDownloadResource } from "@/data/hooks/useDownloads";
 import { useResources } from "@/data/hooks/useResources";
-import { resourcesApi } from "@/data/api/resources.api";
 import type { Resource } from "@/data/types/resources.types";
 import { ResourceList } from "@/features/resources/components/ResourceList";
 
 const MenteeResourcesPage = () => {
   const { toast } = useToast();
   const { data: resourcesData, isLoading } = useResources();
+  const downloadResource = useDownloadResource();
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   const resources: Resource[] = Array.isArray(resourcesData) ? resourcesData : [];
@@ -17,27 +18,7 @@ const MenteeResourcesPage = () => {
 
     try {
       setDownloadingFileId(resource.id);
-      const blob = await resourcesApi.downloadResourceFile(resource.file_url);
-
-      const url = window.URL.createObjectURL(blob);
-
-      if (resource.mime_type === "application/pdf") {
-        const newWindow = window.open(url, "_blank");
-        if (!newWindow) {
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `${resource.title}.pdf`;
-          link.click();
-        }
-      } else {
-        const link = document.createElement("a");
-        link.href = url;
-        const ext = resource.file_url.split(".").pop() || "doc";
-        link.download = `${resource.title}.${ext}`;
-        link.click();
-      }
-
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      await downloadResource.mutateAsync(resource);
     } catch (error: unknown) {
       console.error("Error viewing file:", error);
       toast({

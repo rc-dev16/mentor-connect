@@ -27,7 +27,7 @@ import { useState } from "react";
 import { useSessionRequests } from "@/data/hooks/useSessionRequests";
 import { useSessionRequestMutations } from "@/data/hooks/mutations/useSessionRequestMutations";
 
-const MentorshipConnect = () => {
+const MenteeSessionRequestsPage = () => {
   const { data: requests = [], isLoading: loading } = useSessionRequests();
   const { createSessionRequest, deleteSessionRequest } = useSessionRequestMutations();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -371,4 +371,4 @@ const MentorshipConnect = () => {
   );
 };
 
-export default MentorshipConnect;
+export default MenteeSessionRequestsPage;

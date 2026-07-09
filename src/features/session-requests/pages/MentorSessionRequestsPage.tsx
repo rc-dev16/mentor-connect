@@ -38,7 +38,7 @@ const formatDMY = (iso: string) => {
   return `${d}-${m}-${y}`;
 };
 
-const SessionRequestsPage = () => {
+const MentorSessionRequestsPage = () => {
   const { toast } = useToast();
   const { data: requests = [], isLoading } = useSessionRequests();
   const { updateStatus } = useSessionRequestMutations();
@@ -201,4 +201,4 @@ const SessionRequestsPage = () => {
   );
 };
 
-export default SessionRequestsPage;
+export default MentorSessionRequestsPage;

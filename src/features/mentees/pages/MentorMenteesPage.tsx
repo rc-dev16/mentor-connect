@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDownloadMenteesCsv } from "@/data/hooks/useDownloads";
 import { Search, Mail, Phone, User, GraduationCap, Download } from "lucide-react";
 import { useMentees } from "@/data/hooks/useProfile";
-import MenteeProfileDialog from "../components/MenteeProfileDialog";
+import MenteeProfileDialog from "@/features/personal-info/components/MenteeProfileDialog";
 
 interface Mentee {
   id: string;
@@ -21,7 +21,7 @@ interface Mentee {
   has_personal_info?: boolean;
 }
 
-const MenteesPage = () => {
+const MentorMenteesPage = () => {
   const { toast } = useToast();
   const { data: mentees = [], isLoading } = useMentees();
   const downloadMenteesCsv = useDownloadMenteesCsv();
@@ -226,4 +226,4 @@ const MenteesPage = () => {
   );
 };
 
-export default MenteesPage;
+export default MentorMenteesPage;

@@ -9,7 +9,7 @@ import { useProfile } from "@/data/hooks/useProfile";
 import { usePersonalInfo } from "@/data/hooks/usePersonalInfo";
 import { usePersonalInfoMutations } from "@/data/hooks/mutations/usePersonalInfoMutations";
 
-const PersonalInfo = () => {
+const PersonalInfoPage = () => {
   const { toast } = useToast();
   const { data: profile = { name: "", registration_number: "" } } = useProfile();
   const { data: personalInfoRaw, isLoading: loading } = usePersonalInfo();
@@ -321,4 +321,4 @@ const PersonalInfo = () => {
   );
 };
 
-export default PersonalInfo;
+export default PersonalInfoPage;

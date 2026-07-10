@@ -1,11 +1,13 @@
 import { Navigate, Route } from "react-router-dom";
 import MentorDashboardPage from "@/features/dashboard/pages/MentorDashboardPage";
-import MentorMenteesPage from "@/features/mentees/pages/MentorMenteesPage";
-import MentorSessionRequestsPage from "@/features/session-requests/pages/MentorSessionRequestsPage";
-import MentorReports from "@/mentor/pages/Reports";
-import MentorMeetingsPage from "@/features/meetings/pages/MentorMeetingsPage";
-import MentorResourcesPage from "@/features/resources/pages/MentorResourcesPage";
-import SettingsPage from "@/features/settings/pages/SettingsPage";
+import {
+  MentorMeetingsPage,
+  MentorMenteesPage,
+  MentorReports,
+  MentorResourcesPage,
+  MentorSessionRequestsPage,
+  SettingsPage,
+} from "@/app/routes/lazy-pages";
 import { withAppLayout } from "@/app/routes/withAppLayout";
 
 export const mentorRoutes = (

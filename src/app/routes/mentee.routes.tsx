@@ -1,11 +1,13 @@
 import { Route } from "react-router-dom";
 import MenteeDashboardPage from "@/features/dashboard/pages/MenteeDashboardPage";
-import MenteeSessionRequestsPage from "@/features/session-requests/pages/MenteeSessionRequestsPage";
-import PersonalInfoPage from "@/features/personal-info/pages/PersonalInfoPage";
-import MenteeMeetingsPage from "@/features/meetings/pages/MenteeMeetingsPage";
-import MenteeResourcesPage from "@/features/resources/pages/MenteeResourcesPage";
-import MenteeNotificationsPage from "@/features/notifications/pages/MenteeNotificationsPage";
-import SettingsPage from "@/features/settings/pages/SettingsPage";
+import {
+  MenteeMeetingsPage,
+  MenteeNotificationsPage,
+  MenteeResourcesPage,
+  MenteeSessionRequestsPage,
+  PersonalInfoPage,
+  SettingsPage,
+} from "@/app/routes/lazy-pages";
 import { withAppLayout } from "@/app/routes/withAppLayout";
 
 export const menteeRoutes = (

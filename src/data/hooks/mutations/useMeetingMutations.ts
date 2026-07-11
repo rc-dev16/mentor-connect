@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { meetingsApi } from "@/data/api/meetings.api";
 import { queryKeys } from "@/data/api/query-keys";
-import type { JsonPayload } from "@/data/api/client";
+import type { CreateMeetingInput, UpdateMeetingInput } from "@/data/types/meetings.types";
 
 export function useMeetingMutations() {
   const queryClient = useQueryClient();
@@ -14,12 +14,13 @@ export function useMeetingMutations() {
   };
 
   const createMeeting = useMutation({
-    mutationFn: (data: JsonPayload) => meetingsApi.createMeeting(data),
+    mutationFn: (data: CreateMeetingInput) => meetingsApi.createMeeting(data),
     onSuccess: invalidate,
   });
 
   const updateMeeting = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: JsonPayload }) => meetingsApi.updateMeeting(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateMeetingInput }) =>
+      meetingsApi.updateMeeting(id, data),
     onSuccess: invalidate,
   });
 

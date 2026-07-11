@@ -1,28 +1,36 @@
 import { apiClient } from "@/data/api/client";
-import type { CreateSessionRequestInput } from "@/data/types/session-requests.types";
+import type {
+  CreateSessionRequestInput,
+  SessionRequest,
+  SessionRequestStatus,
+  UpdateSessionRequestStatusInput,
+} from "@/data/types/session-requests.types";
+import type { ApiMessage } from "@shared/contracts/common";
 
 export const sessionRequestsApi = {
   getSessionRequests: (status?: string) => {
     const path = status
       ? `/session-requests?status=${encodeURIComponent(status)}`
       : "/session-requests";
-    return apiClient.get(path, "Failed to fetch session requests");
+    return apiClient.get<SessionRequest[]>(path, "Failed to fetch session requests");
   },
 
   createSessionRequest: (payload: CreateSessionRequestInput) =>
-    apiClient.post("/session-requests", payload, "Failed to create session request"),
+    apiClient.post<SessionRequest>("/session-requests", payload, "Failed to create session request"),
 
   updateStatus: (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: SessionRequestStatus,
     mentor_notes?: string
-  ) =>
-    apiClient.put(
+  ) => {
+    const body: UpdateSessionRequestStatusInput = { status, mentor_notes };
+    return apiClient.put<SessionRequest>(
       `/session-requests/${id}/status`,
-      { status, mentor_notes },
+      body,
       "Failed to update session request"
-    ),
+    );
+  },
 
   deleteSessionRequest: (id: string) =>
-    apiClient.delete(`/session-requests/${id}`, "Failed to cancel session request"),
+    apiClient.delete<ApiMessage>(`/session-requests/${id}`, "Failed to cancel session request"),
 };

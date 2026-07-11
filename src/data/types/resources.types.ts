@@ -1,19 +1,8 @@
-export type Resource = {
-  id: string;
-  title: string;
-  url?: string;
-  description?: string;
-  resource_type?: string;
-  file_url?: string;
-  mime_type?: string;
-  file_size?: number;
-  created_at: string;
-};
+import type { CreateResourceRequest } from "@shared/contracts/resources";
 
-export type CreateResourceInput = {
-  title: string;
-  description?: string;
-  url?: string;
+export type { Resource, CreateResourceRequest, CreateResourceResponse } from "@shared/contracts/resources";
+
+/** Frontend FormData payload (file is not part of the JSON wire contract). */
+export type CreateResourceInput = CreateResourceRequest & {
   file?: File;
-  is_public?: boolean;
 };

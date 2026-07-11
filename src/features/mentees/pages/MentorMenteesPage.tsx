@@ -9,18 +9,6 @@ import { Search, Mail, Phone, User, GraduationCap, Download } from "lucide-react
 import { useMentees } from "@/data/hooks/useProfile";
 import MenteeProfileDialog from "@/features/personal-info/components/MenteeProfileDialog";
 
-interface Mentee {
-  id: string;
-  name: string;
-  email: string;
-  registration_number: string;
-  department: string;
-  phone: string | null;
-  bio: string | null;
-  mentorship_status: string;
-  has_personal_info?: boolean;
-}
-
 const MentorMenteesPage = () => {
   const { toast } = useToast();
   const { data: mentees = [], isLoading } = useMentees();
@@ -30,19 +18,17 @@ const MentorMenteesPage = () => {
   const [selectedMenteeId, setSelectedMenteeId] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const typedMentees = mentees as Mentee[];
-
   const filteredMentees = useMemo(() => {
-    if (!searchTerm) return typedMentees;
+    if (!searchTerm) return mentees;
     const term = searchTerm.toLowerCase();
-    return typedMentees.filter(
+    return mentees.filter(
       (mentee) =>
         mentee.name.toLowerCase().includes(term) ||
         mentee.registration_number.toLowerCase().includes(term) ||
         mentee.email.toLowerCase().includes(term) ||
         mentee.department.toLowerCase().includes(term)
     );
-  }, [searchTerm, typedMentees]);
+  }, [searchTerm, mentees]);
 
   const handleViewProfile = (menteeId: string) => {
     setSelectedMenteeId(menteeId);
@@ -61,7 +47,7 @@ const MentorMenteesPage = () => {
 
       toast({
         title: "Download Successful",
-        description: `Personal information for ${typedMentees.length} mentee(s) has been downloaded.`,
+        description: `Personal information for ${mentees.length} mentee(s) has been downloaded.`,
       });
     } catch (error) {
       console.error("Error downloading mentees data:", error);

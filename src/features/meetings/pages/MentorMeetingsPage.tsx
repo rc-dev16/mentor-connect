@@ -35,13 +35,13 @@ const MentorMeetingsPage = () => {
   const [localCompletedOverrides, setLocalCompletedOverrides] = useState<Record<string, Partial<MentorMeeting>>>({});
 
   const upcomingMeetings = useMemo(
-    () => (meetingsData as Record<string, unknown>[]).filter((meeting) => meeting.status === "scheduled").map(mapMeeting),
+    () => meetingsData.filter((meeting) => meeting.status === "scheduled").map(mapMeeting),
     [meetingsData]
   );
 
   const completedMeetings = useMemo(
     () =>
-      (meetingsData as Record<string, unknown>[])
+      meetingsData
         .filter((meeting) => meeting.status === "completed")
         .map(mapMeeting)
         .map((meeting) => ({ ...meeting, ...localCompletedOverrides[meeting.id] })),

@@ -16,21 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionRequests } from "@/data/hooks/useSessionRequests";
 import { useSessionRequestMutations } from "@/data/hooks/mutations/useSessionRequestMutations";
-
-type RequestStatus = "pending" | "approved" | "rejected";
-
-interface SessionRequest {
-  id: string;
-  topic: string;
-  preferred_time: string;
-  preferred_date: string;
-  comments?: string;
-  mentee_id: string;
-  mentee_name: string;
-  mentee_reg: string;
-  created_at: string;
-  status: RequestStatus;
-}
+import type { SessionRequest, SessionRequestStatus } from "@/data/types/session-requests.types";
 
 const formatDMY = (iso: string) => {
   if (!iso) return "";
@@ -42,15 +28,13 @@ const MentorSessionRequestsPage = () => {
   const { toast } = useToast();
   const { data: requests = [], isLoading } = useSessionRequests();
   const { updateStatus } = useSessionRequestMutations();
-  const [activeTab, setActiveTab] = useState<RequestStatus>("approved");
+  const [activeTab, setActiveTab] = useState<SessionRequestStatus>("approved");
   const [viewing, setViewing] = useState<SessionRequest | null>(null);
   const [teamsLink, setTeamsLink] = useState("");
 
-  const typedRequests = requests as SessionRequest[];
-
   const filtered = useMemo(
-    () => typedRequests.filter((r) => r.status === activeTab),
-    [typedRequests, activeTab]
+    () => requests.filter((r) => r.status === activeTab),
+    [requests, activeTab]
   );
 
   const handleApprove = async (req: SessionRequest) => {
@@ -82,7 +66,7 @@ const MentorSessionRequestsPage = () => {
         <h1 className="text-2xl font-bold">Session Requests</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RequestStatus)}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SessionRequestStatus)}>
         <TabsList className="mb-4">
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
@@ -116,7 +100,7 @@ const MentorSessionRequestsPage = () => {
                   ) : (
                     filtered.map((req) => (
                       <TableRow key={req.id}>
-                        <TableCell className="max-w-[240px] truncate">{req.topic}</TableCell>
+                        <TableCell className="max-w-[240px] truncate">{req.title}</TableCell>
                         <TableCell>
                           {formatDMY(req.preferred_date)} {req.preferred_time}
                         </TableCell>
@@ -157,7 +141,7 @@ const MentorSessionRequestsPage = () => {
             <div className="space-y-4">
               <div>
                 <div className="text-sm text-muted-foreground">Topic</div>
-                <div className="text-sm font-medium">{viewing.topic}</div>
+                <div className="text-sm font-medium">{viewing.title}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -173,10 +157,10 @@ const MentorSessionRequestsPage = () => {
                 <div className="text-sm text-muted-foreground">Mentee</div>
                 <div className="text-sm font-medium">{viewing.mentee_name} ({viewing.mentee_reg})</div>
               </div>
-              {viewing.comments && (
+              {viewing.description && (
                 <div>
-                  <div className="text-sm text-muted-foreground">Comments</div>
-                  <div className="text-sm">{viewing.comments}</div>
+                  <div className="text-sm text-muted-foreground">Discussion Points</div>
+                  <div className="text-sm">{viewing.description}</div>
                 </div>
               )}
               <div>

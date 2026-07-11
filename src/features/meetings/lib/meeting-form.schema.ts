@@ -1,4 +1,7 @@
 import * as z from "zod";
+import type { Meeting } from "@/data/types/meetings.types";
+
+export type { MenteeListItem } from "@/data/types/users.types";
 
 export const scheduleFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -32,23 +35,23 @@ export type MentorMeeting = {
 export type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
 export type NotesFormValues = z.infer<typeof notesFormSchema>;
 
-export type MenteeListItem = {
-  id: string;
-  name: string;
-  registration_number: string;
-};
-
-export const mapMeeting = (meeting: Record<string, unknown>): MentorMeeting => ({
+export const mapMeeting = (meeting: Meeting): MentorMeeting => ({
   id: String(meeting.id),
   date:
-    typeof meeting.meeting_date === "string" ? meeting.meeting_date.slice(0, 10) : String(meeting.meeting_date || ""),
+    typeof meeting.meeting_date === "string"
+      ? meeting.meeting_date.slice(0, 10)
+      : String(meeting.meeting_date || ""),
   time: String(meeting.meeting_time || "").slice(0, 5),
   topic: String(meeting.topic || meeting.title || ""),
   agenda: String(meeting.agenda || ""),
   teamsLink: String(meeting.teams_link || ""),
   comments: typeof meeting.comments === "string" ? meeting.comments : undefined,
   actionPoints: typeof meeting.action_points === "string" ? meeting.action_points : undefined,
-  attendance: Array.isArray(meeting.attendance) ? (meeting.attendance as string[]) : undefined,
+  attendance: Array.isArray(meeting.attendance)
+    ? meeting.attendance
+        .map((entry) => (typeof entry === "string" ? entry : entry.mentee_id))
+        .filter((id): id is string => Boolean(id))
+    : undefined,
   status: meeting.status === "completed" ? "completed" : "upcoming",
   duration_minutes: typeof meeting.duration_minutes === "number" ? meeting.duration_minutes : undefined,
 });

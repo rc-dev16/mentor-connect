@@ -1,8 +1,12 @@
 import { apiClient } from "@/data/api/client";
-import type { CreateResourceInput } from "@/data/types/resources.types";
+import type {
+  CreateResourceInput,
+  CreateResourceResponse,
+  Resource,
+} from "@/data/types/resources.types";
 
 export const resourcesApi = {
-  getResources: () => apiClient.get("/resources", "Failed to fetch resources"),
+  getResources: () => apiClient.get<Resource[]>("/resources", "Failed to fetch resources"),
 
   createResource: (data: CreateResourceInput) => {
     const formData = new FormData();
@@ -14,7 +18,11 @@ export const resourcesApi = {
     if (data.file) formData.append("resource_type", "file");
     else if (data.url) formData.append("resource_type", "link");
 
-    return apiClient.postFormData("/resources", formData, "Failed to create resource");
+    return apiClient.postFormData<CreateResourceResponse>(
+      "/resources",
+      formData,
+      "Failed to create resource"
+    );
   },
 
   downloadResourceFile: (fileUrl: string) =>

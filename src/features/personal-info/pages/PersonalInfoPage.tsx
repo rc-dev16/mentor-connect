@@ -8,6 +8,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/data/hooks/useProfile";
 import { usePersonalInfo } from "@/data/hooks/usePersonalInfo";
 import { usePersonalInfoMutations } from "@/data/hooks/mutations/usePersonalInfoMutations";
+import type { PersonalInfo, PersonalInfoResponse, SavePersonalInfoInput } from "@/data/types/personal-info.types";
+
+function unwrapPersonalInfo(raw: PersonalInfoResponse | undefined): PersonalInfo {
+  if (!raw || typeof raw !== "object") return {};
+  if ("message" in raw && !("section" in raw) && !("roll_no" in raw)) return {};
+  if ("data" in raw && raw.data && typeof raw.data === "object") return raw.data;
+  return raw as PersonalInfo;
+}
 
 const PersonalInfoPage = () => {
   const { toast } = useToast();
@@ -15,16 +23,14 @@ const PersonalInfoPage = () => {
   const { data: personalInfoRaw, isLoading: loading } = usePersonalInfo();
   const savePersonalInfo = usePersonalInfoMutations();
 
-  const personalInfo = (personalInfoRaw as { data?: Record<string, unknown> })?.data
-    || (personalInfoRaw as Record<string, unknown>)
-    || {};
+  const personalInfo = unwrapPersonalInfo(personalInfoRaw);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const data = {
+      const data: SavePersonalInfoInput = {
         section: formData.get("section") as string || undefined,
         roll_no: formData.get("roll_no") as string || undefined,
         branch: formData.get("branch") as string || undefined,

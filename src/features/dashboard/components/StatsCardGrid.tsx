@@ -1,12 +1,6 @@
 import { Calendar, Clock, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface DashboardStats {
-  totalMentees: number;
-  upcomingMeetings: number;
-  pendingRequests: number;
-  completedSessions: number;
-}
+import type { DashboardStats } from "@/data/types/users.types";
 
 interface StatsCardGridProps {
   stats: DashboardStats;

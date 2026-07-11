@@ -5,17 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/data/hooks/useNotifications";
 import { useNotificationMutations } from "@/data/hooks/mutations/useNotificationMutations";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  is_read: boolean;
-  related_entity_type?: string;
-  related_entity_id?: string;
-  created_at: string;
-}
+import type { Notification } from "@/data/types/notifications.types";
 
 const MenteeNotificationsPage = () => {
   const { toast } = useToast();

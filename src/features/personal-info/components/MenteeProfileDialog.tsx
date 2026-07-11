@@ -28,49 +28,6 @@ interface MenteeProfileDialogProps {
   menteeId: string | null;
 }
 
-interface PersonalInfo {
-  section?: string;
-  roll_no?: string;
-  branch?: string;
-  blood_group?: string;
-  hostel_block?: string;
-  room_no?: string;
-  date_of_birth?: string;
-  has_muj_alumni?: boolean;
-  alumni_details?: string;
-  father_name?: string;
-  father_mobile?: string;
-  father_email?: string;
-  father_occupation?: string;
-  father_organization?: string;
-  father_designation?: string;
-  mother_name?: string;
-  mother_mobile?: string;
-  mother_email?: string;
-  mother_occupation?: string;
-  mother_organization?: string;
-  mother_designation?: string;
-  communication_address?: string;
-  communication_pincode?: string;
-  permanent_address?: string;
-  permanent_pincode?: string;
-  business_card_url?: string;
-}
-
-interface MenteeProfile {
-  id: string;
-  name: string;
-  email: string;
-  registration_number: string;
-  department: string;
-  phone: string | null;
-  bio: string | null;
-  profile_image_url: string | null;
-  created_at: string;
-  updated_at: string;
-  personal_info: PersonalInfo;
-}
-
 const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogProps) => {
   const { toast } = useToast();
   const {
@@ -82,7 +39,9 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
   const downloadMenteePdf = useDownloadMenteePdf();
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
-  const profile = profileData as MenteeProfile | undefined;
+  const profile = profileData;
+  const personalInfo = profile?.personal_info ?? null;
+  const hasPersonalInfo = Boolean(personalInfo);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -117,8 +76,6 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
       setIsDownloadingPDF(false);
     }
   };
-
-  const hasPersonalInfo = profile?.personal_info && profile.personal_info !== null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -207,22 +164,22 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Section</label>
-                        <p className="text-sm">{profile.personal_info.section || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.section || "Not provided"}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Roll Number</label>
-                        <p className="text-sm">{profile.personal_info.roll_no || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.roll_no || "Not provided"}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Branch</label>
-                        <p className="text-sm">{profile.personal_info.branch || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.branch || "Not provided"}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Blood Group</label>
-                        <p className="text-sm">{profile.personal_info.blood_group || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.blood_group || "Not provided"}</p>
                       </div>
                     </div>
 
@@ -230,16 +187,16 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Date of Birth</label>
                         <p className="text-sm">
-                          {profile.personal_info.date_of_birth
-                            ? formatDate(profile.personal_info.date_of_birth)
+                          {personalInfo.date_of_birth
+                            ? formatDate(personalInfo.date_of_birth)
                             : "Not provided"}
                         </p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Hostel Details</label>
                         <p className="text-sm">
-                          {profile.personal_info.hostel_block && profile.personal_info.room_no
-                            ? `Block ${profile.personal_info.hostel_block}, Room ${profile.personal_info.room_no}`
+                          {personalInfo.hostel_block && personalInfo.room_no
+                            ? `Block ${personalInfo.hostel_block}, Room ${personalInfo.room_no}`
                             : "Not provided"}
                         </p>
                       </div>
@@ -260,28 +217,28 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Name</label>
-                          <p className="text-sm">{profile.personal_info.father_name || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.father_name || "Not provided"}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Mobile</label>
-                          <p className="text-sm">{profile.personal_info.father_mobile || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.father_mobile || "Not provided"}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Email</label>
-                          <p className="text-sm">{profile.personal_info.father_email || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.father_email || "Not provided"}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Occupation</label>
-                          <p className="text-sm">{profile.personal_info.father_occupation || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.father_occupation || "Not provided"}</p>
                         </div>
                       </div>
-                      {(profile.personal_info.father_organization || profile.personal_info.father_designation) && (
+                      {(personalInfo.father_organization || personalInfo.father_designation) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Organization & Designation</label>
                           <p className="text-sm">
-                            {[profile.personal_info.father_organization, profile.personal_info.father_designation]
+                            {[personalInfo.father_organization, personalInfo.father_designation]
                               .filter(Boolean)
                               .join(" - ") || "Not provided"}
                           </p>
@@ -294,28 +251,28 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Name</label>
-                          <p className="text-sm">{profile.personal_info.mother_name || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.mother_name || "Not provided"}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Mobile</label>
-                          <p className="text-sm">{profile.personal_info.mother_mobile || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.mother_mobile || "Not provided"}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Email</label>
-                          <p className="text-sm">{profile.personal_info.mother_email || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.mother_email || "Not provided"}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Occupation</label>
-                          <p className="text-sm">{profile.personal_info.mother_occupation || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.mother_occupation || "Not provided"}</p>
                         </div>
                       </div>
-                      {(profile.personal_info.mother_organization || profile.personal_info.mother_designation) && (
+                      {(personalInfo.mother_organization || personalInfo.mother_designation) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Organization & Designation</label>
                           <p className="text-sm">
-                            {[profile.personal_info.mother_organization, profile.personal_info.mother_designation]
+                            {[personalInfo.mother_organization, personalInfo.mother_designation]
                               .filter(Boolean)
                               .join(" - ") || "Not provided"}
                           </p>
@@ -323,12 +280,12 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       )}
                     </div>
 
-                    {profile.personal_info.has_muj_alumni && (
+                    {personalInfo.has_muj_alumni && (
                       <div className="space-y-2">
                         <h4 className="font-semibold text-sm">MUJ Alumni Information</h4>
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Alumni Details</label>
-                          <p className="text-sm">{profile.personal_info.alumni_details || "Not provided"}</p>
+                          <p className="text-sm">{personalInfo.alumni_details || "Not provided"}</p>
                         </div>
                       </div>
                     )}
@@ -347,11 +304,11 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       <h4 className="font-semibold text-sm">Communication Address</h4>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Address</label>
-                        <p className="text-sm">{profile.personal_info.communication_address || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.communication_address || "Not provided"}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Pin Code</label>
-                        <p className="text-sm">{profile.personal_info.communication_pincode || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.communication_pincode || "Not provided"}</p>
                       </div>
                     </div>
 
@@ -359,17 +316,17 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       <h4 className="font-semibold text-sm">Permanent Address</h4>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Address</label>
-                        <p className="text-sm">{profile.personal_info.permanent_address || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.permanent_address || "Not provided"}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Pin Code</label>
-                        <p className="text-sm">{profile.personal_info.permanent_pincode || "Not provided"}</p>
+                        <p className="text-sm">{personalInfo.permanent_pincode || "Not provided"}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {profile.personal_info.business_card_url && (
+                {personalInfo.business_card_url && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -381,7 +338,7 @@ const MenteeProfileDialog = ({ isOpen, onClose, menteeId }: MenteeProfileDialogP
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         <a
-                          href={profile.personal_info.business_card_url}
+                          href={personalInfo.business_card_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:underline"

@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sessionRequestsApi } from "@/data/api/session-requests.api";
 import { queryKeys } from "@/data/api/query-keys";
+import type { SessionRequestStatus } from "@/data/types/session-requests.types";
 import type { CreateSessionRequestInput } from "@/data/types/session-requests.types";
 
 export function useSessionRequestMutations() {
@@ -25,7 +26,7 @@ export function useSessionRequestMutations() {
       mentor_notes,
     }: {
       id: string;
-      status: "pending" | "approved" | "rejected";
+      status: SessionRequestStatus;
       mentor_notes?: string;
     }) => sessionRequestsApi.updateStatus(id, status, mentor_notes),
     onSuccess: invalidate,

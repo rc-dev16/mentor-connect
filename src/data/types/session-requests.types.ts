@@ -1,7 +1,6 @@
-export type CreateSessionRequestInput = {
-  title: string;
-  description: string;
-  preferred_date?: string;
-  preferred_time?: string;
-  duration_minutes?: number;
-};
+export type {
+  CreateSessionRequestInput,
+  SessionRequest,
+  SessionRequestStatus,
+  UpdateSessionRequestStatusInput,
+} from "@shared/contracts/session-requests";

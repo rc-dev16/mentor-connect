@@ -19,18 +19,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useMenteeMeetings } from "@/data/hooks/useMeetings";
+import type { Meeting } from "@/data/types/meetings.types";
 
-const mapMeeting = (m: {
-  id: string;
-  meeting_date?: string;
-  meeting_time?: string;
-  topic?: string;
-  title?: string;
-  teams_link?: string;
-  comments?: string;
-  action_points?: string;
-  duration_minutes?: number;
-}, status: string) => ({
+const mapMeeting = (m: Meeting, status: string) => ({
   id: m.id,
   date: (m.meeting_date || "").slice(0, 10),
   time: (m.meeting_time || "").slice(0, 5),

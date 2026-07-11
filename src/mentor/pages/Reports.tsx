@@ -8,24 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useGenerateGroupReport } from "@/data/hooks/useMeetingReport";
 import { useMentees, useProfile } from "@/data/hooks/useProfile";
 import { useMeetings } from "@/data/hooks/useMeetings";
+import type { MeetingSummary } from "@/data/types/meetings.types";
+import type { MenteeListItem } from "@/data/types/users.types";
 
 type ReportType = "group";
 type TimeRange = "this_month" | "semester" | "custom";
-
-interface MenteeLite {
-  id: string;
-  name: string;
-  registration_number: string;
-}
-
-interface MeetingLite {
-  id: string;
-  meeting_date: string;
-  meeting_time: string;
-  title?: string;
-  topic?: string;
-  status: string;
-}
 
 const formatDMY = (iso: string) => {
   if (!iso) return "";
@@ -64,17 +51,18 @@ const ReportsPage = () => {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const mentees = useMemo<MenteeLite[]>(
+  const mentees = useMemo<MenteeListItem[]>(
     () =>
-      (menteesData as { id: string; name: string; registration_number: string }[]).map((m) => ({
+      menteesData.map((m) => ({
         id: m.id,
         name: m.name,
         registration_number: m.registration_number,
+        department: m.department,
       })),
     [menteesData]
   );
 
-  const meetings = meetingsData as MeetingLite[];
+  const meetings = meetingsData as MeetingSummary[];
   const mentorName = profile?.name || "";
   const mentorEmail = profile?.email || "";
 

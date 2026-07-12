@@ -1,3 +1,4 @@
+// @ts-check
 const { getProfileSnippet, getMentorForMentee } = require('../../shared/queries/profile.queries');
 const {
   selectMentorUpcomingMeetings,
@@ -22,6 +23,16 @@ const {
   mergeActivity,
 } = require('./dashboard.mappers');
 
+/**
+ * @typedef {import('@shared/contracts/common').ApiMessage} ApiMessage
+ * @typedef {import('@shared/contracts/common').AuthUser} AuthUser
+ * @typedef {import('@shared/contracts/dashboard').DashboardSummary} DashboardSummary
+ */
+
+/**
+ * @param {AuthUser} user
+ * @returns {Promise<DashboardSummary>}
+ */
 async function getMentorSummary(user) {
   const mentorId = user.userId;
 
@@ -66,6 +77,10 @@ async function getMentorSummary(user) {
   };
 }
 
+/**
+ * @param {AuthUser} user
+ * @returns {Promise<DashboardSummary>}
+ */
 async function getMenteeSummary(user) {
   const menteeId = user.userId;
 
@@ -93,6 +108,10 @@ async function getMenteeSummary(user) {
   };
 }
 
+/**
+ * @param {AuthUser} user
+ * @returns {Promise<DashboardSummary | import('@shared/contracts/common').ApiResult<ApiMessage>>}
+ */
 async function getSummary(user) {
   if (user.userType === 'mentor') {
     return getMentorSummary(user);

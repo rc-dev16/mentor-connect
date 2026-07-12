@@ -1,3 +1,4 @@
+// @ts-check
 const {
   listSessionRequests,
   findActiveMentorForMentee,
@@ -8,6 +9,19 @@ const {
   cancelPendingSessionRequest,
 } = require('./session-requests.queries');
 
+/**
+ * @typedef {import('@shared/contracts/common').ApiMessage} ApiMessage
+ * @typedef {import('@shared/contracts/common').AuthUser} AuthUser
+ * @typedef {import('@shared/contracts/session-requests').SessionRequest} SessionRequest
+ * @typedef {import('@shared/contracts/session-requests').CreateSessionRequestInput} CreateSessionRequestInput
+ * @typedef {import('@shared/contracts/session-requests').UpdateSessionRequestStatusInput} UpdateSessionRequestStatusInput
+ */
+
+/**
+ * @param {AuthUser} user
+ * @param {string} [status]
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<SessionRequest[] | ApiMessage>>}
+ */
 async function getSessionRequests(user, status) {
   const result = await listSessionRequests({
     userId: user.userId,
@@ -22,6 +36,11 @@ async function getSessionRequests(user, status) {
   return { status: 200, body: result.rows };
 }
 
+/**
+ * @param {AuthUser} user
+ * @param {CreateSessionRequestInput} payload
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<SessionRequest | ApiMessage>>}
+ */
 async function createSessionRequest(user, {
   title,
   description,
@@ -66,6 +85,12 @@ async function createSessionRequest(user, {
   return { status: 201, body: rows[0] };
 }
 
+/**
+ * @param {AuthUser} user
+ * @param {string} requestId
+ * @param {UpdateSessionRequestStatusInput} payload
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<SessionRequest | ApiMessage>>}
+ */
 async function updateStatus(user, requestId, { status, mentor_notes }) {
   const { rows } = await updateSessionRequestStatus({
     requestId,
@@ -91,6 +116,11 @@ async function updateStatus(user, requestId, { status, mentor_notes }) {
   return { status: 200, body: rows[0] };
 }
 
+/**
+ * @param {AuthUser} user
+ * @param {string} requestId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<ApiMessage>>}
+ */
 async function cancelRequest(user, requestId) {
   const { rows } = await cancelPendingSessionRequest({
     requestId,

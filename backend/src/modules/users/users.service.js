@@ -1,17 +1,39 @@
+// @ts-check
 const queries = require('./users.queries');
 
+/**
+ * @typedef {import('@shared/contracts/common').ApiMessage} ApiMessage
+ * @typedef {import('@shared/contracts/common').UserType} UserType
+ * @typedef {import('@shared/contracts/users').UserProfile} UserProfile
+ * @typedef {import('@shared/contracts/users').UpdateProfileInput} UpdateProfileInput
+ * @typedef {import('@shared/contracts/users').MentorInfo} MentorInfo
+ * @typedef {import('@shared/contracts/users').Mentee} Mentee
+ */
+
+/**
+ * @returns {Promise<{ hasCabin: boolean, hasAvailability: boolean }>}
+ */
 async function getColumnFlags() {
   const hasCabin = await queries.checkColumnExists('users', 'cabin');
   const hasAvailability = await queries.checkColumnExists('users', 'availability');
   return { hasCabin, hasAvailability };
 }
 
+/**
+ * @param {Record<string, unknown>} record
+ * @param {{ hasCabin: boolean, hasAvailability: boolean }} flags
+ * @returns {Record<string, unknown>}
+ */
 function ensureOptionalColumns(record, { hasCabin, hasAvailability }) {
   if (!hasCabin) record.cabin = null;
   if (!hasAvailability) record.availability = null;
   return record;
 }
 
+/**
+ * @param {string} userId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<UserProfile | ApiMessage>>}
+ */
 async function getProfile(userId) {
   const columnFlags = await getColumnFlags();
   const profile = await queries.selectUserProfile(userId, columnFlags);
@@ -23,6 +45,11 @@ async function getProfile(userId) {
   return { status: 200, body: ensureOptionalColumns(profile, columnFlags) };
 }
 
+/**
+ * @param {string} userId
+ * @param {UpdateProfileInput} updatesInput
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<UserProfile | ApiMessage>>}
+ */
 async function updateProfile(userId, { phone, cabin, availability, bio }) {
   const columnFlags = await getColumnFlags();
   const updates = [];
@@ -38,7 +65,6 @@ async function updateProfile(userId, { phone, cabin, availability, bio }) {
     values.push(cabin);
   } else if (cabin !== undefined && !columnFlags.hasCabin) {
     // Column doesn't exist, but user tried to update it
-    // We could add the column here, but it's better to return an error or ignore
   }
   if (availability !== undefined && columnFlags.hasAvailability) {
     updates.push(`availability = $${paramCount++}`);
@@ -78,6 +104,11 @@ async function updateProfile(userId, { phone, cabin, availability, bio }) {
   return { status: 200, body: ensureOptionalColumns(profile, columnFlags) };
 }
 
+/**
+ * @param {string} userId
+ * @param {UserType} userType
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MentorInfo | ApiMessage>>}
+ */
 async function getMyMentor(userId, userType) {
   if (userType !== 'mentee') {
     return { status: 403, body: { message: 'Access denied' } };
@@ -93,6 +124,11 @@ async function getMyMentor(userId, userType) {
   return { status: 200, body: ensureOptionalColumns(mentor, columnFlags) };
 }
 
+/**
+ * @param {string} userId
+ * @param {UserType} userType
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<Mentee[] | ApiMessage>>}
+ */
 async function getMentees(userId, userType) {
   if (userType !== 'mentor') {
     return { status: 403, body: { message: 'Access denied' } };

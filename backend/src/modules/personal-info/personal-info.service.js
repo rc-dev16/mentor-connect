@@ -1,6 +1,19 @@
+// @ts-check
 const PDFDocument = require('pdfkit');
 const queries = require('./personal-info.queries');
 
+/**
+ * @typedef {import('@shared/contracts/common').ApiMessage} ApiMessage
+ * @typedef {import('@shared/contracts/common').UserType} UserType
+ * @typedef {import('@shared/contracts/personal-info').PersonalInfo} PersonalInfo
+ * @typedef {import('@shared/contracts/personal-info').SavePersonalInfoInput} SavePersonalInfoInput
+ * @typedef {import('@shared/contracts/personal-info').MenteeProfile} MenteeProfile
+ */
+
+/**
+ * @param {string} userId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<PersonalInfo | ApiMessage>>}
+ */
 async function getPersonalInfo(userId) {
   const rows = await queries.selectPersonalInfoByUserId(userId);
 
@@ -11,6 +24,11 @@ async function getPersonalInfo(userId) {
   return { status: 200, body: rows[0] };
 }
 
+/**
+ * @param {string} userId
+ * @param {SavePersonalInfoInput} data
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<{ message: string, data: PersonalInfo }>>}
+ */
 async function savePersonalInfo(userId, data) {
   const {
     section, roll_no, branch, blood_group, hostel_block, room_no, date_of_birth,
@@ -63,6 +81,11 @@ async function savePersonalInfo(userId, data) {
   };
 }
 
+/**
+ * @param {UserType} userType
+ * @param {string} menteeId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MenteeProfile | ApiMessage>>}
+ */
 async function getMenteeProfile(userType, menteeId) {
   if (userType !== 'mentor') {
     return { status: 403, body: { message: 'Access denied' } };
@@ -173,6 +196,11 @@ function buildMenteesCsv(mentees) {
   return csvContent;
 }
 
+/**
+ * @param {UserType} userType
+ * @param {string} mentorId
+ * @returns {Promise<*>}
+ */
 async function exportMenteesCsv(userType, mentorId) {
   if (userType !== 'mentor') {
     return { status: 403, body: { message: 'Access denied' } };
@@ -363,6 +391,13 @@ function generateMenteePdf(mentee, personalInfo, res) {
   doc.end();
 }
 
+/**
+ * @param {UserType} userType
+ * @param {string} mentorId
+ * @param {string} menteeId
+ * @param {*} res
+ * @returns {Promise<*>}
+ */
 async function exportMenteePdf(userType, mentorId, menteeId, res) {
   if (userType !== 'mentor') {
     return { status: 403, body: { message: 'Access denied' } };

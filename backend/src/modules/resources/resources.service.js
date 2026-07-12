@@ -1,7 +1,14 @@
+// @ts-check
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const queries = require('./resources.queries');
+
+/**
+ * @typedef {import('@shared/contracts/common').ApiMessage} ApiMessage
+ * @typedef {import('@shared/contracts/resources').Resource} Resource
+ * @typedef {import('@shared/contracts/resources').CreateResourceResponse} CreateResourceResponse
+ */
 
 const UPLOAD_DIR = path.join(__dirname, '../../../uploads/resources');
 
@@ -63,6 +70,10 @@ function getContentTypeForFilename(filename) {
   return contentTypes[ext] || null;
 }
 
+/**
+ * @param {string} userId
+ * @returns {Promise<Resource[]>}
+ */
 async function getResources(userId) {
   const userType = await queries.selectUserType(userId);
 
@@ -79,6 +90,12 @@ async function getResources(userId) {
   return queries.selectNoResources();
 }
 
+/**
+ * @param {string} userId
+ * @param {{ title?: string, description?: string, resource_type?: string, is_public?: string | boolean, url?: string }} body
+ * @param {{ filename: string, size: number, mimetype: string } | undefined} [file]
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<CreateResourceResponse | ApiMessage>>}
+ */
 async function createResource(userId, body, file) {
   const { title, description, resource_type, is_public } = body;
 

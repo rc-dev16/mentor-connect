@@ -1,6 +1,24 @@
+// @ts-check
 const PDFDocument = require('pdfkit');
 const queries = require('./meetings.queries');
 
+/**
+ * @typedef {import('@shared/contracts/common').ApiMessage} ApiMessage
+ * @typedef {import('@shared/contracts/common').UserType} UserType
+ * @typedef {import('@shared/contracts/meetings').Meeting} Meeting
+ * @typedef {import('@shared/contracts/meetings').MeetingSummary} MeetingSummary
+ * @typedef {import('@shared/contracts/meetings').CreateMeetingInput} CreateMeetingInput
+ * @typedef {import('@shared/contracts/meetings').UpdateMeetingInput} UpdateMeetingInput
+ * @typedef {import('@shared/contracts/meetings').CompleteMeetingInput} CompleteMeetingInput
+ * @typedef {import('@shared/contracts/users').MenteeListItem} MenteeListItem
+ */
+
+/**
+ * @param {UserType} userType
+ * @param {string} menteeId
+ * @param {string} [status]
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MeetingSummary[] | ApiMessage>>}
+ */
 async function getMeetingsForMentee(userType, menteeId, status) {
   if (userType !== 'mentee') {
     return { status: 403, body: { message: 'Access denied' } };
@@ -10,11 +28,21 @@ async function getMeetingsForMentee(userType, menteeId, status) {
   return { status: 200, body: rows };
 }
 
+/**
+ * @param {string} mentorId
+ * @param {string} [status]
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MeetingSummary[]>>}
+ */
 async function getMeetingsForMentor(mentorId, status) {
   const rows = await queries.selectMeetingsForMentor(mentorId, status);
   return { status: 200, body: rows };
 }
 
+/**
+ * @param {string} meetingId
+ * @param {string} mentorId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<Meeting | ApiMessage>>}
+ */
 async function getMeetingById(meetingId, mentorId) {
   const meeting = await queries.selectMeetingById(meetingId, mentorId);
 
@@ -26,6 +54,11 @@ async function getMeetingById(meetingId, mentorId) {
   return { status: 200, body: meeting };
 }
 
+/**
+ * @param {string} mentorId
+ * @param {CreateMeetingInput} body
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MeetingSummary>>}
+ */
 async function createMeeting(mentorId, body) {
   const {
     title,
@@ -53,6 +86,12 @@ async function createMeeting(mentorId, body) {
   return { status: 201, body: meeting };
 }
 
+/**
+ * @param {string} meetingId
+ * @param {string} mentorId
+ * @param {UpdateMeetingInput} updates
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MeetingSummary | ApiMessage>>}
+ */
 async function updateMeeting(meetingId, mentorId, updates) {
   const result = await queries.updateMeeting(meetingId, mentorId, updates);
 
@@ -67,6 +106,12 @@ async function updateMeeting(meetingId, mentorId, updates) {
   return { status: 200, body: result.row };
 }
 
+/**
+ * @param {string} meetingId
+ * @param {string} mentorId
+ * @param {CompleteMeetingInput} payload
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MeetingSummary | ApiMessage>>}
+ */
 async function completeMeeting(meetingId, mentorId, { comments, actionPoints, attendance }) {
   const meeting = await queries.completeMeetingWithAttendance({
     meetingId,
@@ -83,6 +128,11 @@ async function completeMeeting(meetingId, mentorId, { comments, actionPoints, at
   return { status: 200, body: meeting };
 }
 
+/**
+ * @param {string} meetingId
+ * @param {string} mentorId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<ApiMessage>>}
+ */
 async function deleteMeeting(meetingId, mentorId) {
   const meeting = await queries.deleteMeeting(meetingId, mentorId);
 
@@ -93,6 +143,10 @@ async function deleteMeeting(meetingId, mentorId) {
   return { status: 200, body: { message: 'Meeting deleted successfully' } };
 }
 
+/**
+ * @param {string} mentorId
+ * @returns {Promise<import('@shared/contracts/common').ApiResult<MenteeListItem[]>>}
+ */
 async function getMenteesList(mentorId) {
   const rows = await queries.selectMenteesForMentor(mentorId);
   return { status: 200, body: rows };
@@ -257,6 +311,12 @@ function generateMeetingPdf(meeting, attendanceRows, res) {
   doc.end();
 }
 
+/**
+ * @param {string} meetingId
+ * @param {string} mentorId
+ * @param {*} res
+ * @returns {Promise<{ streamed: true } | import('@shared/contracts/common').ApiResult<ApiMessage>>}
+ */
 async function downloadMeetingPdf(meetingId, mentorId, res) {
   const meeting = await queries.selectMeetingForDownload(meetingId, mentorId);
 

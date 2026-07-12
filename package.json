@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "./start.sh"
+    "start": "./start.sh",
+    "check:backend": "tsc -p backend/tsconfig.json --pretty false",
+    "typecheck:backend": "npm run check:backend"
   },
   "dependencies": {
     "@clerk/react": "^6.11.3",

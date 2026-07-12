@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "kill-port": "node kill-port.cjs",
     "restart": "node kill-port.cjs && node src/server.js",
-    "test": "jest"
+    "test": "jest",
+    "check": "tsc -p tsconfig.json --pretty false"
   },
   "dependencies": {
     "@clerk/express": "^2.1.35",

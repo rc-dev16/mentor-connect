@@ -12,9 +12,9 @@
 
 <p align="center">
   <a href="#-features-breakdown">Key Features</a> •
-  <a href="#-getting-started">Getting Started</a> •
   <a href="#-tech-stack">Tech Stack</a> •
-  <a href="#-api-reference">API Docs</a>
+  <a href="#-getting-started">Getting Started</a> •
+  <a href="#-documentation">Docs</a>
 </p>
 
 <p align="center">
@@ -93,8 +93,8 @@ Frontend, Backend, and Database as independent services.
 | TypeScript | Type safety |
 | Tailwind CSS + shadcn/ui | UI styling |
 | TanStack Query | Server state management |
+| React Router | Role-based routing |
 | Clerk React SDK | Authentication |
-| Recharts | Charts & analytics |
 
 ### ⚙️ Backend
 | Technology | Purpose |
@@ -102,8 +102,8 @@ Frontend, Backend, and Database as independent services.
 | Node.js | Runtime |
 | Express.js | REST API |
 | PostgreSQL | Relational database |
-| Prisma ORM | DB access layer |
-| Clerk Node SDK | Auth verification |
+| `pg` + SQL | Data access |
+| Clerk Express SDK | Auth verification |
 | Multer | File uploads |
 | PDFKit | Report generation |
 | Helmet + CORS | Security |
@@ -112,114 +112,44 @@ Frontend, Backend, and Database as independent services.
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Node.js 20+
-- PostgreSQL 15+
-- Git
-
-### Installation
+**Prerequisites:** Node.js 20+, PostgreSQL 15+, Clerk keys.
 
 ```bash
 git clone https://github.com/rc-dev16/mentor-connect.git
 cd mentor-connect
+npm install && cd backend && npm install && cd ..
 ```
+
+Set `VITE_CLERK_PUBLISHABLE_KEY` + `VITE_API_BASE_URL` in `.env.local`, and Clerk + `DATABASE_URL` in `backend/config.env` (see [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) §9).
 
 ```bash
-npm install
-cd backend
-npm install
-cd ..
-```
-
-### Environment Variables
-
-#### Frontend (`.env.local`)
-
-```env
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-VITE_API_BASE_URL=http://localhost:5001/api
-VITE_CLERK_JWT_TEMPLATE=backend
-```
-
-#### Backend (`backend/config.env`)
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/mentorconnect
-PORT=5001
-NODE_ENV=development
-CLERK_SECRET_KEY=sk_test_...
-CLERK_JWT_AUD=backend
+psql "$DATABASE_URL" -f database/schema.sql
+cd backend && npm run dev   # API → :5001
+npm run dev                 # App → :8080
 ```
 
 ---
 
-## 🏃 Running Locally
+## 📖 Documentation
 
-```bash
-cd backend
-npm run dev
-```
-
-```bash
-npm run dev
-```
-
-Frontend → [http://localhost:8080](http://localhost:8080)
-Backend → [http://localhost:5001/api/health](http://localhost:5001/api/health)
-
----
-
-## 📂 Project Structure
-
-```
-mentor-connect/
-├── backend/
-│   ├── src/routes/
-│   ├── src/controllers/
-│   ├── src/middleware/
-│   └── uploads/
-├── src/
-│   ├── mentor/
-│   ├── mentee/
-│   ├── components/
-│   └── services/
-├── database/
-└── public/
-```
-
----
-
-## 📡 API Reference
-
-| Method | Endpoint              | Description          | Access |
-| ------ | --------------------- | -------------------- | ------ |
-| GET    | /api/users/profile    | Current user profile | All    |
-| GET    | /api/users/my-mentor  | Assigned mentor      | Mentee |
-| GET    | /api/meetings         | List meetings        | All    |
-| POST   | /api/meetings         | Create meeting       | Mentor |
-| POST   | /api/session-requests | Request 1-on-1       | Mentee |
-| POST   | /api/resources        | Upload resource      | Mentor |
-| GET    | /api/notifications    | Notifications        | All    |
+Full architecture, auth, database seeding, API modules, and testing:  
+**[docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md)**
 
 ---
 
 ## 🌐 Deployment (Railway)
 
-**Live Application:** [https://mentor-connect.up.railway.app](https://mentor-connect.up.railway.app)
+**Live:** [https://mentor-connect.up.railway.app](https://mentor-connect.up.railway.app)
 
-* **Database:** PostgreSQL service
-* **Backend:** Express API service
-* **Frontend:** React + Vite service
-* **Auth:** Clerk (invite-only, no public signup)
+* **Database** · **Backend (Express)** · **Frontend (Vite)** · **Auth (Clerk, invite-only)**
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repo
-2. Create feature branch
-3. Commit changes
-4. Push and open PR
+1. Fork the repo  
+2. Create a feature branch  
+3. Commit, push, and open a PR  
 
 ---
 

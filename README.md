@@ -157,6 +157,4 @@ Full architecture, auth, database seeding, API modules, and testing:
 
 **Built with ❤️ for Academic Mentorship**
 
-License: MIT
-
 </div>

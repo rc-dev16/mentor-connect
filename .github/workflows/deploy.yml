@@ -18,13 +18,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd mentor-connect
-            chmod +x deploy.sh
-            ./deploy.sh
+            git pull origin main
+            sudo docker compose build
+            sudo docker compose up -d
 
-      - name: Notify on Failure
-        if: failure()
-        uses: appleboy/discord-action@master
-        with:
-          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
-          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-          message: "🚨 Deployment to Mentor Connect VPS failed! Check GitHub Actions logs."
+

@@ -140,7 +140,7 @@ flowchart LR
   api --> files
 ```
 
-**Deployment model:** three-tier on Railway — frontend service, backend service, managed PostgreSQL. Frontend talks to backend via `VITE_API_BASE_URL`.
+**Deployment model:** three-tier on Interslice VPS — frontend service (Caddy Proxy), backend service (Express), private PostgreSQL. Frontend talks to backend via `VITE_API_BASE_URL`.
 
 ---
 
@@ -413,7 +413,7 @@ CLERK_AUTHORIZED_PARTIES=http://localhost:8080,http://127.0.0.1:8080
 
 `CLERK_PUBLISHABLE_KEY` is required on the backend for `@clerk/express`. Without it, hosted auth routes fail.
 
-### Production (Railway + Clerk)
+### Production (Interslice VPS + Clerk)
 
 Use the **same** Clerk application keys on frontend and backend services.
 
@@ -794,9 +794,13 @@ Use **separate browser contexts** (normal + incognito) so Clerk sessions do not 
 - Mentee: login → dashboard → mentorship-connect → personal-info → resources → notifications  
 - Mentor: login → dashboard → mentees → meetings → session-requests → reports  
 
-### Deployment (Railway)
+### Deployment (Interslice VPS)
 
-Three-tier: PostgreSQL + Express API + Vite frontend. Auth is Clerk (invite-only). Env alignment is documented in **§9 Production**.
+The app is deployed using Docker Compose on a private Interslice VPS.
+
+- **Frontend**: Served via a multi-stage Docker build, with `server.js` dynamically injecting environment variables into `index.html` at runtime, exposed via Caddy Reverse Proxy on port 80/443.
+- **Backend**: Express API running in a Node.js container on port 5000, exposed via Caddy Proxy to the `api` subdomain.
+- **Database**: PostgreSQL 15 running in a private Docker container on port 5432.
 
 ### Known limitations / tech debt
 

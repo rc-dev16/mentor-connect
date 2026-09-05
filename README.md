@@ -8,7 +8,7 @@
 **A modern, full-stack mentorship management platform connecting educational institutions.**  
 *Built for seamless interaction, role-based security, and academic growth.*
 
-🌐 **Live Application:** [mentor-connect.up.railway.app](https://mentor-connect.up.railway.app)
+🌐 **Live Application:** [mentorconnect-app.duckdns.org](https://mentorconnect-app.duckdns.org)
 
 <p align="center">
   <a href="#-features-breakdown">Key Features</a> •
@@ -23,7 +23,7 @@
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" />
-  <img src="https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
 </p>
 
 </div>
@@ -41,8 +41,8 @@ It replaces fragmented spreadsheets, emails, and manual processes with a central
 - 📊 **Academic Reporting:** Attendance, session summaries, and semester-level reports.
 - 📂 **Resource Sharing:** Centralized upload and access to study materials.
 
-The platform is deployed using a **three-tier architecture** on Railway:
-Frontend, Backend, and Database as independent services.
+The platform is deployed using a **three-tier architecture** on a private Interslice VPS:
+Frontend (Caddy Reverse Proxy), Backend (Node), and Database (PostgreSQL) as independent Docker services.
 
 ---
 
@@ -137,9 +137,9 @@ Full architecture, auth, database seeding, API modules, and testing:
 
 ---
 
-## 🌐 Deployment (Railway)
+## 🌐 Deployment (Interslice VPS + GitHub Actions)
 
-**Live:** [https://mentor-connect.up.railway.app](https://mentor-connect.up.railway.app)
+**Live:** [https://mentorconnect-app.duckdns.org](https://mentorconnect-app.duckdns.org)
 
 * **Database** · **Backend (Express)** · **Frontend (Vite)** · **Auth (Clerk, invite-only)**
 

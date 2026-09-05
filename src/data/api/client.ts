@@ -1,6 +1,7 @@
 import { getClerkSessionToken } from "@/auth/services/clerk-token";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+// @ts-ignore
+export const API_BASE_URL = (typeof window !== 'undefined' && window.ENV?.VITE_API_BASE_URL) || import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 export type JsonPayload = Record<string, unknown>;
 

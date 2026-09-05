@@ -4,7 +4,8 @@ import { ClerkAuthBridge } from "@/auth/providers/ClerkAuthBridge";
 import App from "@/app/App";
 import "./index.css";
 
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// @ts-ignore
+const clerkPublishableKey = (typeof window !== 'undefined' && window.ENV?.VITE_CLERK_PUBLISHABLE_KEY) || import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const rootElement = document.getElementById("root")!;
 
 const MissingClerkConfig = () => (

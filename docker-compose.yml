@@ -1,6 +1,25 @@
 version: '3.8'
 
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   frontend:
     build:
       context: .
@@ -8,21 +27,22 @@ services:
       args:
         - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
         - VITE_API_BASE_URL=${VITE_API_BASE_URL}
-    ports:
-      - "8080:8080"
     environment:
       - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
       - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     restart: unless-stopped
     depends_on:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "5001:5001"
     environment:
       - NODE_ENV=production
       - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
@@ -37,6 +57,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   db:
     image: postgres:15-alpine
@@ -44,8 +69,6 @@ services:
       - POSTGRES_USER=mentor_admin
       - POSTGRES_PASSWORD=your_secure_password
       - POSTGRES_DB=mentor_connect
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -54,7 +77,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --schedule "0 0 */3 * *" --cleanup
 
 volumes:
   postgres_data:
   backend_uploads:
+  caddy_data:
+  caddy_config:

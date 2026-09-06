@@ -85,9 +85,9 @@ const MentorMenteesPage = () => {
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary" className="text-sm">
-            {typedMentees.length} Total Mentees
+            {mentees.length} Total Mentees
           </Badge>
-          {typedMentees.length > 0 && (
+          {mentees.length > 0 && (
             <Button
               onClick={handleDownloadMenteesInfo}
               disabled={isDownloading}
